@@ -2,55 +2,59 @@
 """
 data API
 """
-from flask import render_template, request, flash, redirect, url_for, jsonify
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 
+app = Flask(__name__)
 
 @app.route('/public/student/<uni>', methods=['POST'])
 def create_student(uni):
-    pass
+    return "create_student: "+str(uni)
 
 @app.route('/public/student/<uni>', methods=['GET'])
 def retrive_student(uni):
-    pass
+    return "retrive_student: "+str(uni)
 
 @app.route('/public/student/<uni>', methods=['PUT'])
 def update_student(uni):
-    pass
+    return "update_student: "+str(uni)
 
 @app.route('/public/student/<uni>', methods=['DELETE'])
 def delete_student(uni):
-    pass
+    return "delete_student: "+str(uni)
 
 
 @app.route('/public/course/<cid>', methods=['POST'])
 def create_course(cid):
-    pass
+    return "create_course: "+str(cid)
 
 @app.route('/public/course/<cid>', methods=['GET'])
 def retrive_course(cid):
-    pass
+    return "retrive_course: "+str(cid)
 
 @app.route('/public/course/<cid>', methods=['PUT'])
 def update_course(cid):
-    pass
+    return "update_course: "+str(cid)
 
 @app.route('/public/course/<cid>', methods=['DELETE'])
 def delete_course(cid):
-    pass
+    return "delete_course: "+str(cid)
 
 
 @app.route('/public/registration/<rid>', methods=['POST'])
 def create_registration(rid):
-    pass
+    return "create_registration: "+str(rid)
 
 @app.route('/public/registration/<rid>', methods=['GET'])
 def retrive_registration(rid):
-    pass
+    return "retrive_registration: "+str(rid)
 
 @app.route('/public/registration/<rid>', methods=['PUT'])
 def update_registration(rid):
-    pass
+    return "update_registration: "+str(rid)
 
 @app.route('/public/registration/<rid>', methods=['DELETE'])
 def delete_registration(rid):
-    pass
+    return "delete_registration: "+str(rid)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
