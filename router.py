@@ -1,27 +1,56 @@
-from eve import Eve
-from eve.auth import BasicAuth
+# -*- coding: utf-8 -*-
+"""
+data API
+"""
+from flask import render_template, request, flash, redirect, url_for, jsonify
 
-class Authenticate(BasicAuth):
-    def check_auth(self, username, password, allowed_roles, resource,
-                   method):
-        print resource
-        print method 
-        if resource == 'user' and method == 'GET':
-            user = app.data.driver.db['user']
-            user = user.find_one({'username': username,'password':password})
-            
-            if user:
-                return True
-            else:
-                return False
-        elif resource == 'user' and method == 'POST':
-            print username
-            print password
-            return username == 'admin' and password == 'password'
-        else:
-            return True
-            
 
-if __name__ == '__main__':
-    app = Eve(auth=Authenticate)
-    app.run(host='0.0.0.0')
+@app.route('/public/student/<uni>', methods=['POST'])
+def create_student(uni):
+    pass
+
+@app.route('/public/student/<uni>', methods=['GET'])
+def retrive_student(uni):
+    pass
+
+@app.route('/public/student/<uni>', methods=['PUT'])
+def update_student(uni):
+    pass
+
+@app.route('/public/student/<uni>', methods=['DELETE'])
+def delete_student(uni):
+    pass
+
+
+@app.route('/public/course/<cid>', methods=['POST'])
+def create_course(cid):
+    pass
+
+@app.route('/public/course/<cid>', methods=['GET'])
+def retrive_course(cid):
+    pass
+
+@app.route('/public/course/<cid>', methods=['PUT'])
+def update_course(cid):
+    pass
+
+@app.route('/public/course/<cid>', methods=['DELETE'])
+def delete_course(cid):
+    pass
+
+
+@app.route('/public/registration/<rid>', methods=['POST'])
+def create_registration(rid):
+    pass
+
+@app.route('/public/registration/<rid>', methods=['GET'])
+def retrive_registration(rid):
+    pass
+
+@app.route('/public/registration/<rid>', methods=['PUT'])
+def update_registration(rid):
+    pass
+
+@app.route('/public/registration/<rid>', methods=['DELETE'])
+def delete_registration(rid):
+    pass
