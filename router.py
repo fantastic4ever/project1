@@ -67,6 +67,27 @@ def delete_student(uni):
     shard_index = uni_hash(uni)
     return requests.delete('/private/student/shard/%d/uni/%s'%(shard_index,uni)).status_code
 
+### data definition api for student ###
+@app.route('/public/student/scheme', methods=['POST'])
+def create_new_column_for_student_scheme():
+    logging.info("receive a create_new_column_for_student_scheme request")
+    return requests.post("/private/student/scheme",params=request.args).status_code
+
+@app.route('/public/student/scheme', methods=['GET'])
+def retrive_student_scheme():
+    logging.info("receive a retrive_student_scheme request")
+    return requests.get('/private/student/scheme').content
+
+@app.route('/public/student/scheme', methods=['PUT'])
+def update_column_of_student_scheme():
+    logging.info("receive a update_column_of_student_scheme request")
+    return requests.put("/private/student/scheme",params=request.args).status_code
+
+@app.route('/public/student/scheme', methods=['DELETE'])
+def delete_column_of_student_scheme():
+    logging.info("receive a delete_column_of_student_scheme request")
+    return requests.delete("/private/student/scheme",params=request.args).status_code
+
 
 ### data manipulation api for course ###
 @app.route('/public/course', methods=['POST'])
