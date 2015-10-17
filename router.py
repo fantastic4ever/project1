@@ -5,10 +5,32 @@ data API
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 import requests
 import logging
+import urllib
+from collections import OrderedDict
+
 from settings import NUMBER_OF_SHARD, LOG_FILENAME
+
 
 app = Flask(__name__)
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO,format='%(asctime)s --- %(message)s')
+
+### get a list of all available public api ###
+@app.route('/public', methods=['GET'])
+def list_api():
+    output = []
+    html = "<!DOCTYPE html><html><head><title>Page Title</title></head><body><p>%s</p></body></html>"
+    for rule in app.url_map.iter_rules():
+
+        options = {}
+        for arg in rule.arguments:
+            options[arg] = "[{0}]".format(arg)
+
+        methods = ','.join(rule.methods)
+        url = url_for(rule.endpoint, **options)
+        line = urllib.unquote("<b>%s</b><br>%s<br>%s<br>"%(rule.endpoint, methods, url))
+        output.append(line)
+
+    return html%"</p><p>".join(sorted(output))
 
 ### data manipulation api for student ###
 @app.route('/public/student', methods=['POST'])
@@ -108,6 +130,7 @@ def update_registration(rid):
 def delete_registration(rid):
     logging.info("receive a delete_registration request")
     return requests.delete('/private/course/%s'%cid).status_code
+
 
 
 ### util functions
