@@ -10,6 +10,7 @@ from settings import NUMBER_OF_SHARD, LOG_FILENAME
 app = Flask(__name__)
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO,format='%(asctime)s --- %(message)s')
 
+### data manipulation api for student ###
 @app.route('/public/student', methods=['POST'])
 def create_student():
     logging.info("receive a create_student request")
@@ -45,6 +46,7 @@ def delete_student(uni):
     return requests.delete('/private/student/shard/%d/uni/%s'%(shard_index,uni)).status_code
 
 
+### data manipulation api for course ###
 @app.route('/public/course', methods=['POST'])
 def create_course():
     logging.info("receive a create_course request")
@@ -76,6 +78,7 @@ def delete_course(cid):
     return requests.delete('/private/course/%s'%cid).status_code
 
 
+### data manipulation api for registration ###
 @app.route('/public/registration/<rid>', methods=['POST'])
 def create_registration(rid):
     logging.info("receive a create_registration request")
@@ -106,6 +109,8 @@ def delete_registration(rid):
     logging.info("receive a delete_registration request")
     return requests.delete('/private/course/%s'%cid).status_code
 
+
+### util functions
 def uni_hash(uni):
     return uni.__hash__()%NUMBER_OF_SHARD
 
