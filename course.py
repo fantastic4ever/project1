@@ -20,10 +20,10 @@ def pre_DELETE_callback(resource, request, lookup):
 	print 'Received DELETE request, resource = %s, lookup = %s' % (resource, lookup)
 	
 	# TODO Get registration host and port from instance_info db
+	registration_service_url = "http://127.0.0.1:3000/private/registration/courseid/"
+	#print '%s"%s"' % (registration_service_url, lookup['call_number'])
 	
 	# Try delete from registration before delete locally
-	registration_service_url = "http://127.0.0.1:3000/private/registration/courseid/"
-	print '%s"%s"' % (registration_service_url, lookup['call_number'])
 	response = requests.delete(registration_service_url + '"' + lookup['call_number'] + '"')
 	#print response.__dict__['status_code']
 	#print response.json() # Response body
