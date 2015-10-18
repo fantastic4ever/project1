@@ -1,6 +1,7 @@
 from eve import Eve
 from eve.auth import BasicAuth
 from flask import Response
+from pymongo import MongoClient
 import requests, json, sys
 
 # Custom error handler
@@ -9,6 +10,7 @@ class Custom500Registration(Exception):
 
 #################################################################################
 app = Eve(settings='course_settings.py')
+mongo_url = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
 
 @app.errorhandler(Custom500Registration)
 def failed_to_delete_registration(error):
@@ -17,16 +19,19 @@ def failed_to_delete_registration(error):
 def pre_DELETE_callback(resource, request, lookup):
 	print 'Received DELETE request, resource = %s, lookup = %s' % (resource, lookup)
 	
-	# Try delete from registration before delete locally
+	# TODO Get registration host and port from instance_info db
 	registration_service_url = "http://127.0.0.1:3000/private/registration/courseid/"
-	print '%s"%s"' % (registration_service_url, lookup['call_number'])
-	response = requests.get(registration_service_url + '"' + lookup['call_number'] + '"')
-	#response = requests.delete(registration_service_url + '"' + lookup['call_number'] + '"')
-	print response.json()
+	#print '%s"%s"' % (registration_service_url, lookup['call_number'])
 	
-	if response.status_code > 206:
+	# Try delete from registration before delete locally
+	response = requests.delete(registration_service_url + '"' + lookup['call_number'] + '"')
+	#print response.__dict__['status_code']
+	#print response.json() # Response body
+	status_code = response.__dict__['status_code']
+	
+	if status_code != 200 and status_code != 404:
 		# Failed to delete related registration information
-		print "Failed to delete related registration information"
+		print "Exception: Failed to delete related registration information"
 		raise Custom500Registration
 
 if __name__ == '__main__':
