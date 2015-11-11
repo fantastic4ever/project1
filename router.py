@@ -187,7 +187,7 @@ def delete_registration(rid):
 ### api for creating new microservice instance
 ### TODO: store the instance pid into db in case of failure of router process
 @app.route('/public/instance/<instanceType>', methods=['POST'])
-def create_course_instance(instanceType):
+def create_instance(instanceType):
     try:
         port = router_config.PORT_POOL.pop()  ## port is also the instance id
         code_path = None
