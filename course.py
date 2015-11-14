@@ -21,12 +21,23 @@ def pre_DELETE_callback(resource, request, lookup):
 	
 	# TODO Get registration host and port from instance_info db
 	registration_service_url = "http://127.0.0.1:3000/private/registration/courseid/"
+	client = MongoClient(mongo_url)
+	db = client.project1
+	cursor = db.instance_info.find({"instanceType": "registration"})
+	client.close()
+	if cursor.count() < 1:
+		return 'Error : Registartion service is not running'
+	for document in cursor:
+		print document
+		print document['host']
+		print document['port']
+		registration_service_url = 'http://' + document['host'] + ':' + str(document['port']) + '/private/registration/uni/'
 	#print '%s"%s"' % (registration_service_url, lookup['call_number'])
 	
 	# Try delete from registration before delete locally
 	response = requests.delete(registration_service_url + '"' + lookup['call_number'] + '"')
 	#print response.__dict__['status_code']
-	#print response.json() # Response body
+	#print response.json # Response body
 	status_code = response.__dict__['status_code']
 	
 	if status_code != 200 and status_code != 404:
