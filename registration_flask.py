@@ -1,10 +1,57 @@
 from flask import Flask, request
 import urllib2, json, requests
 import sys, subprocess
-import os
+import os, signal, time
+from flask import jsonify
+from pymongo import MongoClient
+import registration_flask as rf 
 
+global eve_process
+global args
+
+uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+client = MongoClient(uri)
+db = client.get_default_database()
+settings = db.settings
+my_settings = settings.find_one({'name': 'registration'})
+print my_settings['name']
+print my_settings
 app = Flask(__name__)
 eve_url = ''
+
+@app.route("/private/registration/schema", methods = ['GET'])
+def search_for_registration_shema():
+    return 	jsonify(my_settings['value']['DOMAIN']['registration']['schema'])
+
+@app.route("/private/registration/schema/<attribute>", methods = ['POST'])
+def add_for_registration_shema(attribute):
+	attribute_value = request.get_json()
+	my_settings['value']['DOMAIN']['registration']['schema'][attribute] = attribute_value
+	# update the schema in mongodb
+	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+	print result.matched_count
+	#restart eve service to load new schema settings
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	return ("Successfully add the attribute '" + attribute + "'", 200)
+
+@app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
+def delete_for_registration_shema(attribute):
+    #check if attribute is in the registration schema
+	if attribute in my_settings['value']['DOMAIN']['registration']['schema']:
+		del my_settings['value']['DOMAIN']['registration']['schema'][attribute]
+		# update the schema in mongodb
+		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+		print result.matched_count
+		#restart eve service to load new schema settings
+		stop_eve_process()
+		time.sleep(0.1)
+		start_eve_process()
+		return ("Successfully delete the attribute '" + attribute + "'", 200)
+	else:
+		return ("Failed to delete the attribute: '" + attribute + "' is not in registration schema", 300) 
+
 
 @app.route("/private/registration", methods = ['GET'])
 def search_for_registration():
@@ -103,6 +150,16 @@ def update_registration_for_uni_cid(uni, cid):
 			response = requests.put(eve_url + '/' + firstItem['_id'],  data = json.dumps(content), headers = headers)
 			return response.content
 
+def stop_eve_process():
+	print "stopping registration eve process..."
+	print rf.eve_process.pid
+	os.kill(rf.eve_process.pid, signal.SIGTERM)
+
+def start_eve_process():
+	print "starting registration eve process..."
+	rf.eve_process = subprocess.Popen(args)
+	print rf.eve_process.pid
+
 if __name__ == "__main__":
 		if(len(sys.argv) >= 3):
 			host = sys.argv[1]
@@ -111,6 +168,6 @@ if __name__ == "__main__":
 			eve_url = 'http://' + host + ':' + eve_port + '/registration'
 			args = ['python', 'registration_eve.py', host, eve_port]
 			#run eve service as subprocess in background
-			subprocess.Popen(args)
+			start_eve_process()
 			app.run(host=host, port=int(sys.argv[2]))
 
