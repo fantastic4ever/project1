@@ -1,14 +1,8 @@
 from eve import Eve
 import sys
-import student_settings as ss
-import json
+import util
 
-#app = Eve(settings='student_settings.py')
-# with open('student_config.txt', 'w') as outfile:
-# 	json.dump(ss.my_settings, outfile)
-with open('student_config.txt') as data_file:    
-    my_settings = json.load(data_file)
-app = Eve(settings=my_settings)
+app = Eve(settings=util.get_eve_setting('student', 'current'))
 
 if __name__ == '__main__':
 	if(len(sys.argv) == 3):
