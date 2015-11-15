@@ -25,10 +25,17 @@ eve_url = ''
 def search_for_registration_shema():
     return 	jsonify(my_schema['value'])
 
-@app.route("/private/registration/schema/<attribute>", methods = ['POST'])
-def add_for_registration_shema(attribute):
-	attribute_value = request.get_json()
-	my_schema['value'][attribute] = attribute_value
+@app.route("/private/registration/schema", methods = ['POST'])
+def add_for_registration_shema():
+	content = request.get_json()
+	print content
+	count = 0
+	for k, v in content.items():
+		if k in my_schema['value'].keys():
+			print k + ' already exists in registration schema'
+		else:
+			my_schema['value'][k] = v
+			count = count + 1
 	# update the schema in mongodb
 	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
@@ -36,7 +43,21 @@ def add_for_registration_shema(attribute):
 	stop_eve_process()
 	time.sleep(0.1)
 	start_eve_process()
-	return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
+	# return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
+	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) added", "code": 200}}', mimetype='application/json', status=200)
+
+# @app.route("/private/registration/schema/<attribute>", methods = ['POST'])
+# def add_for_registration_shema(attribute):
+# 	attribute_value = request.get_json()
+# 	my_schema['value'][attribute] = attribute_value
+# 	# update the schema in mongodb
+# 	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+# 	print result.matched_count
+# 	#restart eve service to load new schema settings
+# 	stop_eve_process()
+# 	time.sleep(0.1)
+# 	start_eve_process()
+# 	return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
 
 @app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
 def delete_for_registration_shema(attribute):
