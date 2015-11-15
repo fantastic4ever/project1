@@ -37,7 +37,7 @@ def add_for_registration_shema():
 			my_schema['value'][k] = v
 			count = count + 1
 	# update the schema in mongodb
-	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
 	#restart eve service to load new schema settings
 	stop_eve_process()
@@ -45,6 +45,27 @@ def add_for_registration_shema():
 	start_eve_process()
 	# return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
 	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) added", "code": 200}}', mimetype='application/json', status=200)
+
+@app.route("/private/registration/schema", methods = ['PUT'])
+def update_for_registration_shema():
+	content = request.get_json()
+	print content
+	count = 0
+	for k, v in content.items():
+		if k in my_schema['value'].keys():
+			my_schema['value'][k] = v
+			count = count + 1
+		else:
+			print k + ' does not exists in registration schema, can not update it'
+	# update the schema in mongodb
+	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+	print result.matched_count
+	#restart eve service to load new schema settings
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	# return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
+	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) updated", "code": 200}}', mimetype='application/json', status=200)
 
 # @app.route("/private/registration/schema/<attribute>", methods = ['POST'])
 # def add_for_registration_shema(attribute):
@@ -70,7 +91,7 @@ def delete_for_registration_shema():
 		if k in my_schema['value'].keys():
 			del my_schema['value'][k]
 			# update the schema in mongodb
-			result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+			result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 			print result.matched_count
 			count = count + 1
 		else:
