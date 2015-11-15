@@ -81,7 +81,7 @@ GET {ServerPath}/public/registration
 
 
 ---
-### GET **/registraion/courseid/<cid>**
+### GET **/registraion/courseid/\<cid\>**
 
 Retrieve registrations by course id.
 
@@ -137,7 +137,7 @@ GET {ServerPath}/public/registraion/cid/COMSW4771
 ```
 
 ---
-### GET **/registraion/uni/<uni>**
+### GET **/registraion/uni/\<uni\>**
 
 Retrieve registrations by uni.
 
