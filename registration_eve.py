@@ -1,6 +1,5 @@
 from eve import Eve
 import sys
-import registration_global
 from pymongo import MongoClient
 
 """my_settings = {
