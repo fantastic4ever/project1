@@ -3,17 +3,16 @@ from pymongo import MongoClient
 import urllib2, json, requests
 import sys, subprocess
 import os, signal, time
-import student_settings as ss
 import student_flask as sf
 import json
+import util
+from util import mongo_url
 
 app = Flask(__name__)
 eve_url = ''
 global eve_process
 global args
-mongo_url = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
-with open('student_config.txt') as data_file:    
-    my_settings = json.load(data_file)
+my_setting = util.get_eve_setting('student', 'current')
 
 #Just redirect GET request to eve service
 @app.route("/private/student/<uni>", methods=['GET'])
@@ -40,12 +39,10 @@ def delete_student(uni):
 	regis_info = client.project1.instance_info.find({'instanceType' : 'registration'})
 	if(regis_info.count() == 0):
 		return 'Error : Registartion service is not running'
-	registration_url = 'http://' + regis_info[0]['host'] + ':' + regis_info[0]['port'] + '/private/registration/uni/'
+	registration_url = 'http://' + str(regis_info[0]['host']) + ':' + str(regis_info[0]['port']) + '/private/registration/uni/'
 	client.close()
 	#Send DELETE request to eve service to delete student
 	response = requests.delete(eve_url + student_info['_id'], headers={"If-Match" : student_info['_etag']})
-	if response.status_code > 206:    #Failed to delete student information
-		return response.content
 	#Send DELETE request to registration service
 	response2 = requests.delete(registration_url + uni)
 	return response.content + '\n\n' + response2.content
@@ -66,21 +63,23 @@ def update_student(uni):
 #Get student schema
 @app.route("/private/student/schema", methods=["GET"])
 def get_student_schema():
-	return 	jsonify(my_settings['DOMAIN']['student']['schema'])
+	return 	jsonify(my_setting['DOMAIN']['student']['schema'])
 
 #Delete an attribute in student schema 
 @app.route("/private/student/schema/<attribute>", methods=['DELETE'])
 def delete_student_schema(attribute):
 	#check if attribute is in student schema
-	if attribute in my_settings['DOMAIN']['student']['schema']:
-		del my_settings['DOMAIN']['student']['schema'][attribute]
-		with open('student_config.txt', 'w') as outfile:
-			json.dump(my_settings, outfile)
+	if attribute in my_setting['DOMAIN']['student']['schema'] and not attribute in my_setting['DOMAIN']['student']['additional_lookup']['field']:
+		del my_setting['DOMAIN']['student']['schema'][attribute]
+		# update eve setting in db
+		result = util.update_eve_setting('current', 'student', my_setting)
 		#restart eve service to load new schema settings
 		stop_eve_process()
 		time.sleep(0.1)
 		start_eve_process()
 		return "Successfully delete attribute '" + attribute + "'"
+	elif attribute in my_setting['DOMAIN']['student']['schema']:
+		return "Failed to delete attribute: '" + attribute + "' is primary attribute in student schema" 
 	else:
 		return "Failed to delete attribute: '" + attribute + "' is not in student schema" 
 
@@ -89,15 +88,15 @@ def delete_student_schema(attribute):
 def add_student_schema(attribute):
 	attribute_value=request.get_json()
 	#validate attribute_value
-	#if attribute_value is valid, then add attribute to schema
-	my_settings['DOMAIN']['student']['schema'][attribute] = attribute_value
-	with open('student_config.txt', 'w') as outfile:
-		json.dump(my_settings, outfile)
-	#restart eve service to load new schema settings
-	stop_eve_process()
-	time.sleep(0.1)
-	start_eve_process()
-	return "success!"
+	#if attribute_value is valid and current schema does not have the attribute, then add attribute to schema
+	if attribute not in my_setting['DOMAIN']['student']['schema']:
+		my_setting['DOMAIN']['student']['schema'][attribute] = attribute_value
+		result = util.update_eve_setting('current', 'student', my_setting)
+		#restart eve service to load new schema settings
+		stop_eve_process()
+		time.sleep(0.1)
+		start_eve_process()
+		return "Successfully add attribute '" + attribute + "'"
 
 def stop_eve_process():
 	print "stopping student eve process..."
