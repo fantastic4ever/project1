@@ -13,23 +13,24 @@ global args
 uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
 client = MongoClient(uri)
 db = client.get_default_database()
-settings = db.settings
-my_settings = settings.find_one({'name': 'registration'})
-print my_settings['name']
-print my_settings
+schema = db.schema
+my_schema = schema.find_one({'name': 'registration'})
+print 'flask...'
+print my_schema['value']
+
 app = Flask(__name__)
 eve_url = ''
 
 @app.route("/private/registration/schema", methods = ['GET'])
 def search_for_registration_shema():
-    return 	jsonify(my_settings['value']['DOMAIN']['registration']['schema'])
+    return 	jsonify(my_schema['value'])
 
 @app.route("/private/registration/schema/<attribute>", methods = ['POST'])
 def add_for_registration_shema(attribute):
 	attribute_value = request.get_json()
-	my_settings['value']['DOMAIN']['registration']['schema'][attribute] = attribute_value
+	my_schema['value'][attribute] = attribute_value
 	# update the schema in mongodb
-	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
 	#restart eve service to load new schema settings
 	stop_eve_process()
@@ -40,10 +41,10 @@ def add_for_registration_shema(attribute):
 @app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
 def delete_for_registration_shema(attribute):
     #check if attribute is in the registration schema
-	if attribute in my_settings['value']['DOMAIN']['registration']['schema']:
-		del my_settings['value']['DOMAIN']['registration']['schema'][attribute]
+	if attribute in my_schema['value']:
+		del my_schema['value'][attribute]
 		# update the schema in mongodb
-		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 		print result.matched_count
 		#restart eve service to load new schema settings
 		stop_eve_process()

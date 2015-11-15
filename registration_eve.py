@@ -2,7 +2,15 @@ from eve import Eve
 import sys
 from pymongo import MongoClient
 
-"""my_settings = {
+uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+client = MongoClient(uri)
+db = client.get_default_database()
+schema = db.schema
+my_schema = schema.find_one({'name': 'registration'})
+print 'eve.......'
+print my_schema['value']
+
+my_settings = {
     'MONGO_HOST': 'ds039684.mongolab.com',
     'MONGO_PORT': 39684,
 	'MONGO_USERNAME': 'admin',
@@ -10,14 +18,7 @@ from pymongo import MongoClient
 	'MONGO_DBNAME': 'project1',
     'DOMAIN': {
     	'registration': {
-        	'schema': {
-            	'UNI': {
-                	'type': 'string'
-            	},
-            	'Course_ID': {
-                	'type': 'string'
-            	}
-        	},
+        	'schema': my_schema['value'],
         	'additional_lookup': {
             	'url': 'regex("[\w]+")',
             	'field': 'UNI',
@@ -26,17 +27,9 @@ from pymongo import MongoClient
 	},
 	'RESOURCE_METHODS': ['GET', 'POST', 'DELETE'],
 	'ITEM_METHODS': ['GET', 'PUT', 'DELETE', 'PATCH']
-}"""
+}
 
-
-uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
-client = MongoClient(uri)
-db = client.get_default_database()
-settings = db.settings
-my_settings = settings.find_one({'name': 'registration'})
-print 'eve.......'
-print my_settings['value']
-app = Eve(settings=my_settings['value']) 
+app = Eve(settings=my_settings) 
  
 if __name__ == '__main__':
     if (len(sys.argv) == 3):
