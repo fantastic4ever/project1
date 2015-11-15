@@ -8,19 +8,15 @@ import logging
 import urllib
 import subprocess
 import os
-from flask.ext.pymongo import PyMongo
+from pymongo import MongoClient
 from collections import OrderedDict
 
 import credentials
 import router_config
 
 app = Flask(__name__)
-app.config['MONGOLAB_HOST'] = 'ds039684.mongolab.com'
-app.config['MONGOLAB_PORT'] = 39684
-app.config['MONGOLAB_DBNAME'] = 'project1'
-app.config['MONGO_USERNAME'] = credentials.DB_USERNAME
-app.config['MONGO_PASSWORD'] = credentials.DB_PASSWORD
-mongo = PyMongo(app)
+mongo_url = 'mongodb://%s:%s@ds039684.mongolab.com:39684/project1' % (credentials.DB_USERNAME, credentials.DB_PASSWORD)
+mongo = MongoClient(mongo_url)
 logging.basicConfig(filename=router_config.LOG_FILENAME,
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 DEVNULL = open(os.devnull, 'wb')
@@ -28,6 +24,7 @@ instance_info_table = {}  # map iid/port to (instanceType,subp)
 student_shard_table = {}  # map shar to (host,port)
 course_iid = None
 registration_iid = None
+current_number_of_shards = 0
 
 
 @app.route('/public', methods=['GET'])
@@ -61,6 +58,8 @@ def create_student():
     except Exception, e:
         return "invalid request"
     shard_index = uni_hash(uni)
+    if shard_index not in student_shard_table:
+        return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[shard_index]
     return requests.post('http://%s:%d/private/student' % (host, port), json=sanitized_data).status_code
 
@@ -72,6 +71,9 @@ def retrive_student(uni):
     """api for student RETRIVE"""
     logging.info("receive a retrive_student request")
     shard_index = uni_hash(uni)
+    if shard_index not in student_shard_table:
+        return "500: student instance %s is not started" % shard_index
+    host, port = student_shard_table[shard_index]
     return requests.get('http://%s:%d/private/student/%s' % (host, port, uni)).content
 
 
@@ -86,6 +88,9 @@ def update_student(uni):
     except Exception, e:
         return "invalid request"
     shard_index = uni_hash(uni)
+    if shard_index not in student_shard_table:
+        return "500: student instance %s is not started" % shard_index
+    host, port = student_shard_table[shard_index]
     return requests.put('http://%s:%d/private/student/%s' % (host, port, uni), json=sanitized_data).status_code
 
 
@@ -94,6 +99,9 @@ def delete_student(uni):
     """api for student DELETE"""
     logging.info("receive a delete_student request")
     shard_index = uni_hash(uni)
+    if shard_index not in student_shard_table:
+        return "500: student instance %s is not started" % shard_index
+    host, port = student_shard_table[shard_index]
     return requests.delete('http://%s:%d/private/student/%s' % (host, port, uni)).status_code
 
 """data definition api for student"""
@@ -221,7 +229,8 @@ def delete_registration(rid):
 
 
 @app.route('/public/instance/<instanceType>', methods=['POST'])
-def create_instance(instanceType):
+@app.route('/public/instance/<instanceType>/<shard_number>', methods=['POST'])
+def create_instance(instanceType, shard_number = -1):
     try:
         port = router_config.PORT_POOL.pop()  # port is also the instance id
         code_path = None
@@ -235,19 +244,25 @@ def create_instance(instanceType):
             code_path = router_config.REGISTRATION_CODE_PATH
             global registration_iid
             registration_iid = port
+        if instanceType == "student":  # map shard number with host:port
+            if shard_number < 0:
+                return "illegal shard_number!"
+            if shard_number in student_shard_table:
+                return "Shard %s has already been started!" % shard_number
+            global current_number_of_shards
+            if current_number_of_shards>router_config.NUMBER_OF_SHARD:
+                return "reach the max of shards"
+            student_shard_table[shard_number] = (router_config.HOST, port)
+            current_number_of_shards += 1
         subp = subprocess.Popen(['python',
                                  code_path,
-                                 '%s:%d' % (router_config.HOST, port)],
+                                 '%s:%d' % (router_config.HOST, port, this_shard_number)],
                                 stdout=DEVNULL, stderr=DEVNULL)
         instance_info_table[port] = (instanceType, subp)
         this_instance = {"instanceId": port, "instanceType": "course",
                          "host": router_config.HOST, "port": port}
-        mongo.db.instance_info.insert_one(this_instance)
-
-        if instanceType == "student":  # map shard number with host:port
-            this_shard_number = router_config.NUMBER_OF_SHARD
-            student_shard_table[this_shard_number] = (host, port)
-            router_config.NUMBER_OF_SHARD += 1
+        mongo.project1.instance_info.insert_one(this_instance)
+        
     except Exception, e:
         return 500
     # succeed
@@ -262,13 +277,14 @@ def delete_instance(iid):  # port is also the instance id
         instanceType, subp = instance_info_table[iid]
         subp.kill()
         del instance_info_table[iid]
-        mongo.db.instance_info.delete_one("instanceId": iid)
+        mongo.project1.instance_info.delete_one({"instanceId": iid})
         if instanceType == "student":  # unmap shard number
             # find the corresponding shard and delete
             for shard, (host, port) in student_shard_table:
                 if str(port) == str(iid):
                     del student_shard_table[shard]
-                    router_config.NUMBER_OF_SHARD -= 1
+                    global current_number_of_shards
+                    current_number_of_shards -= 1
         if instanceType == "course":
             global course_iid
             course_iid = None
