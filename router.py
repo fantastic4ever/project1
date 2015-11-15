@@ -2,7 +2,7 @@
 """
 data API
 """
-from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify, Response
 import requests
 import logging
 import urllib
@@ -156,6 +156,15 @@ def retrive_course(cid):
     return requests.get('http://%s:%d/private/course/%s' % (router_config.HOST, course_iid, cid)).content
 
 
+@app.route('/public/course/', methods=['GET'])
+def retrive_all_course():
+    logging.info("receive a retrive_all_course request")
+    if not course_iid:
+        return "500: course instance is not started"
+    response = requests.get('http://%s:%d/private/course' % (router_config.HOST, course_iid))
+    return Response(response.content, mimetype='application/json', status=200)
+
+
 @app.route('/public/course/<cid>', methods=['PUT'])
 def update_course(cid):
     logging.info("receive a update_course request")
@@ -193,6 +202,15 @@ def create_registration(rid):
     except Exception, e:
         return "invalid request"
     return requests.post('http://%s:%d/private/registration' % (router_config.HOST, registration_iid), json=sanitized_data).status_code
+
+
+@app.route('/public/registration', methods=['GET'])
+def retrive_all_registration():
+    logging.info("receive a retrive_all_registration request")
+    if not registration_iid:  # iid is port
+        return "500: registration instance is not started"
+    response = requests.get('http://%s:%d/private/registration' % (router_config.HOST, registration_iid))
+    return Response(response.content, mimetype='application/json', status=200)
 
 
 @app.route('/public/registration/<rid>', methods=['GET'])
@@ -256,7 +274,9 @@ def create_instance(instanceType, shard_number = -1):
             current_number_of_shards += 1
         subp = subprocess.Popen(['python',
                                  code_path,
-                                 '%s:%d' % (router_config.HOST, port, this_shard_number)],
+                                 str(router_config.HOST),
+                                 str(port)],
+                                 # '%s:%d' % (router_config.HOST, port, this_shard_number)],
                                 stdout=DEVNULL, stderr=DEVNULL)
         instance_info_table[port] = (instanceType, subp)
         this_instance = {"instanceId": port, "instanceType": "course",
@@ -264,9 +284,9 @@ def create_instance(instanceType, shard_number = -1):
         mongo.project1.instance_info.insert_one(this_instance)
         
     except Exception, e:
-        return 500
+        return "500"
     # succeed
-    return 201
+    return "201"
 
 """delete any microservice instance"""
 
@@ -292,8 +312,8 @@ def delete_instance(iid):  # port is also the instance id
             global registration_iid
             registration_iid = None
     except Exception, e:
-        return 500
-    return 201  # succeed
+        return "500"
+    return "201"  # succeed
 
 """util functions"""
 
@@ -306,5 +326,9 @@ def getSanitizedJson(original_json):
     """used for security check (incomplete)"""
     return original_json
 
+def init():
+    mongo.project1.drop_collection('instance_info')
+
 if __name__ == '__main__':
+    init()
     app.run(host='0.0.0.0', debug=True)
