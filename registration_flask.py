@@ -91,12 +91,11 @@ def delete_for_registration_shema():
 		if k in my_schema['value'].keys():
 			del my_schema['value'][k]
 			# update the schema in mongodb
-			result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
-			print result.matched_count
 			count = count + 1
 		else:
 			print k + ' does not exists in registration schema, can not delete it'
-
+	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+	print result.matched_count
 	#restart eve service to load new schema settings
 	stop_eve_process()
 	time.sleep(0.1)
