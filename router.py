@@ -57,11 +57,16 @@ def create_student():
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
+    if "uni" not in sanitized_data:
+        return "uni is not found"
+    uni = sanitized_data["uni"]
     shard_index = uni_hash(uni)
-    if shard_index not in student_shard_table:
+    print student_shard_table
+    if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
-    host, port = student_shard_table[shard_index]
-    return requests.post('http://%s:%d/private/student' % (host, port), json=sanitized_data).status_code
+    host, port = student_shard_table[str(shard_index)]
+    print sanitized_data
+    return str(requests.post('http://%s:%d/private/student' % (host, port), data=sanitized_data).status_code)
 
 """data manipulation api for student"""
 
@@ -268,15 +273,15 @@ def create_instance(instanceType, shard_number = -1):
             if shard_number in student_shard_table:
                 return "Shard %s has already been started!" % shard_number
             global current_number_of_shards
-            if current_number_of_shards>router_config.NUMBER_OF_SHARD:
+            if current_number_of_shards>=router_config.NUMBER_OF_SHARD:
                 return "reach the max of shards"
-            student_shard_table[shard_number] = (router_config.HOST, port)
+            student_shard_table[str(shard_number)] = (router_config.HOST, port)
             current_number_of_shards += 1
         subp = subprocess.Popen(['python',
                                  code_path,
                                  str(router_config.HOST),
-                                 str(port)],
-                                 # '%s:%d' % (router_config.HOST, port, this_shard_number)],
+                                 str(port),
+                                 str(shard_number)],
                                 stdout=DEVNULL, stderr=DEVNULL)
         instance_info_table[port] = (instanceType, subp)
         this_instance = {"instanceId": port, "instanceType": "course",
@@ -284,6 +289,7 @@ def create_instance(instanceType, shard_number = -1):
         mongo.project1.instance_info.insert_one(this_instance)
         
     except Exception, e:
+        print e
         return "500"
     # succeed
     return "201"
