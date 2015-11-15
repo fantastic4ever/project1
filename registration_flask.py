@@ -32,7 +32,7 @@ def add_for_registration_shema():
 	count = 0
 	for k, v in content.items():
 		if k in my_schema['value'].keys():
-			print k + ' already exists in registration schema'
+			print k + ' already exists in registration schema, can not add it'
 		else:
 			my_schema['value'][k] = v
 			count = count + 1
@@ -59,21 +59,44 @@ def add_for_registration_shema():
 # 	start_eve_process()
 # 	return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
 
-@app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
-def delete_for_registration_shema(attribute):
-    #check if attribute is in the registration schema
-	if attribute in my_schema['value']:
-		del my_schema['value'][attribute]
-		# update the schema in mongodb
-		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
-		print result.matched_count
-		#restart eve service to load new schema settings
-		stop_eve_process()
-		time.sleep(0.1)
-		start_eve_process()
-		return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully delete an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
-	else:
-		return Response('{"_status": "ERR", "_error": {"message": "Failed to delete the attribute. The attribute is not in the schema.", "code": 500}}', mimetype = 'application/json', status = 300)
+@app.route("/private/registration/schema", methods = ['DELETE'])
+def delete_for_registration_shema():
+	content = request.get_json()
+	print type(content)
+	print content
+	count = 0
+	for k in content:
+		print k
+		if k in my_schema['value'].keys():
+			del my_schema['value'][k]
+			# update the schema in mongodb
+			result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+			print result.matched_count
+			count = count + 1
+		else:
+			print k + ' does not exists in registration schema, can not delete it'
+
+	#restart eve service to load new schema settings
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) deleted", "code": 200}}', mimetype = 'application/json', status = 200)
+
+# @app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
+# def delete_for_registration_shema(attribute):
+#     #check if attribute is in the registration schema
+# 	if attribute in my_schema['value']:
+# 		del my_schema['value'][attribute]
+# 		# update the schema in mongodb
+# 		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
+# 		print result.matched_count
+# 		#restart eve service to load new schema settings
+# 		stop_eve_process()
+# 		time.sleep(0.1)
+# 		start_eve_process()
+# 		return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully delete an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
+# 	else:
+# 		return Response('{"_status": "ERR", "_error": {"message": "Failed to delete the attribute. The attribute is not in the schema.", "code": 500}}', mimetype = 'application/json', status = 300)
 
 @app.route("/private/registration", methods = ['GET'])
 def search_for_registration():
