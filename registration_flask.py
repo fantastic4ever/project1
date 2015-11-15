@@ -3,6 +3,7 @@ import urllib2, json, requests
 import sys, subprocess
 import os, signal, time
 from flask import jsonify
+from flask import Response
 from pymongo import MongoClient
 import registration_flask as rf 
 
@@ -12,85 +13,92 @@ global args
 uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
 client = MongoClient(uri)
 db = client.get_default_database()
-settings = db.settings
-my_settings = settings.find_one({'name': 'registration'})
-print my_settings['name']
-print my_settings
+schema = db.schema
+my_schema = schema.find_one({'name': 'registration'})
+print 'flask...'
+print my_schema['value']
+
 app = Flask(__name__)
 eve_url = ''
 
 @app.route("/private/registration/schema", methods = ['GET'])
 def search_for_registration_shema():
-    return 	jsonify(my_settings['value']['DOMAIN']['registration']['schema'])
+    return 	jsonify(my_schema['value'])
 
 @app.route("/private/registration/schema/<attribute>", methods = ['POST'])
 def add_for_registration_shema(attribute):
 	attribute_value = request.get_json()
-	my_settings['value']['DOMAIN']['registration']['schema'][attribute] = attribute_value
+	my_schema['value'][attribute] = attribute_value
 	# update the schema in mongodb
-	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+	result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
 	#restart eve service to load new schema settings
 	stop_eve_process()
 	time.sleep(0.1)
 	start_eve_process()
-	return ("Successfully add the attribute '" + attribute + "'", 200)
+	return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully add an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
 
 @app.route("/private/registration/schema/<attribute>", methods = ['DELETE'])
 def delete_for_registration_shema(attribute):
     #check if attribute is in the registration schema
-	if attribute in my_settings['value']['DOMAIN']['registration']['schema']:
-		del my_settings['value']['DOMAIN']['registration']['schema'][attribute]
+	if attribute in my_schema['value']:
+		del my_schema['value'][attribute]
 		# update the schema in mongodb
-		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_settings['value']}})
+		result = db.settings.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 		print result.matched_count
 		#restart eve service to load new schema settings
 		stop_eve_process()
 		time.sleep(0.1)
 		start_eve_process()
-		return ("Successfully delete the attribute '" + attribute + "'", 200)
+		return Response('{"_status": "SUCCESS", "_success": {"message": "Successfully delete an attribute ", "code": 200}}', mimetype = 'application/json', status = 200)
 	else:
-		return ("Failed to delete the attribute: '" + attribute + "' is not in registration schema", 300) 
-
+		return Response('{"_status": "ERR", "_error": {"message": "Failed to delete the attribute. The attribute is not in the schema.", "code": 500}}', mimetype = 'application/json', status = 300)
 
 @app.route("/private/registration", methods = ['GET'])
 def search_for_registration():
 		response = requests.get(eve_url)
 		registration_info = response.json()
-		return response.content
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/uni/<uni>", methods = ['GET'])
 def search_registration_for_uni(uni):
 		payload = {'where': 'UNI==' + uni}
 		response = requests.get(eve_url, params = payload)
 		registration_info = response.json()
-		return response.content
+		print registration_info
+		items = registration_info['_items']
+		if items == []:
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/courseid/<cid>", methods = ['GET'])
 def search_registration_for_cid(cid):
 		payload = {'where': 'Course_ID==' + cid}
 		response = requests.get(eve_url, params = payload)
 		registration_info = response.json()
-		return response.content
+		items = registration_info['_items']
+		if items == []:
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['GET'])
 def search_registration_for_uni_cid(uni, cid):
 		payload = {'where': '{"UNI":' + '"' + uni + '", "Course_ID":' + '"' + cid + '"}'}
 		response = requests.get(eve_url, params = payload)
 		registration_info = response.json()
-		return response.content
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration", methods = ['POST'])
 def post_registration():
 		content = request.get_json(force = True)
 		headers = {'content-type': 'application/json'}
 		response = requests.post(eve_url, data=json.dumps(content), headers = headers)
-		return response.content
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration", methods = ['DELETE'])
 def delete_registration():
 		response = requests.delete(eve_url)
-		return response.content
+		return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/uni/<uni>", methods = ['DELETE'])
 def delete_registration_for_uni(uni):
@@ -100,11 +108,11 @@ def delete_registration_for_uni(uni):
 		print registration_info
 		items = registration_info['_items']
 		if items == []:
-			return ('', 404)
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
 		else:
 			for item in items:
 				response = requests.delete(eve_url + '/' + item['_id'], params = payload, headers = {"If-Match": item['_etag']})
-			return response.content
+			return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/courseid/<cid>", methods = ['DELETE'])
 def delete_registration_for_cid(cid):
@@ -114,11 +122,11 @@ def delete_registration_for_cid(cid):
 		print registration_info
 		items = registration_info['_items']
 		if items == []:
-			return ('', 404)
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
 		else:
 			for item in items:
 				response = requests.delete(eve_url + '/' + item['_id'], params = payload, headers = {"If-Match": item['_etag']})
-			return response.content
+			return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['GET'])
 def delete_registration_for_uni_cid(uni, cid):
@@ -128,11 +136,11 @@ def delete_registration_for_uni_cid(uni, cid):
 		print registration_info
 		items = registration_info['_items']
 		if items == []:
-			return ('', 404)
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
 		else:
 			firstItem = items[0]
 			response = requests.delete(eve_url + '/' + firstItem['_id'], params = payload, headers = {"If-Match": firstItem['_etag']})
-			return response.content
+			return Response(response.content, mimetype='application/json', status=200)
 
 @app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['PUT'])
 def update_registration_for_uni_cid(uni, cid):
@@ -142,13 +150,13 @@ def update_registration_for_uni_cid(uni, cid):
 		print registration_info
 		items = registration_info['_items']
 		if items == []:
-			return ('', 404)
+			return Response('{"_status": "ERR", "_error": {"message": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.", "code": 404}}', mimetype='application/json', status=404)
 		else:
 			firstItem = items[0]
 			content = request.get_json(force=True)
 			headers = {'content-type': 'application/json', 'If-Match': firstItem['_etag']}
 			response = requests.put(eve_url + '/' + firstItem['_id'],  data = json.dumps(content), headers = headers)
-			return response.content
+			return Response(response.content, mimetype='application/json', status=200)
 
 def stop_eve_process():
 	print "stopping registration eve process..."
