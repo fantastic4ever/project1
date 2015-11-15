@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from pymongo import MongoClient
 import urllib2, json, requests
 import sys, subprocess
@@ -12,19 +12,26 @@ app = Flask(__name__)
 eve_url = ''
 global eve_process
 global args
-my_setting = util.get_eve_setting('student', 'current')
+student_num = 'student'
+student_schema = util.get_eve_schema('student')
 
-#Just redirect GET request to eve service
+#Get all student information
+@app.route("/private/student", methods=['GET'])
+def get_all_student():
+	response = requests.get(eve_url)
+	return Response(response.content, mimetype='application/json', status=200)
+
+#Get student information by uni. Flask just redirect GET request to eve service
 @app.route("/private/student/<uni>", methods=['GET'])
 def get_student(uni):
 	response = requests.get(eve_url + uni)
-	return response.content
+	return Response(response.content, mimetype='application/json', status=200)
 
-#Just redirect POST request to eve service 
+#Add student information. Flask just redirect POST request to eve service 
 @app.route("/private/student", methods=['POST'])
 def add_student():
 	response = requests.post(eve_url, data=request.get_json())
-	return response.content
+	return Response(response.content, mimetype='application/json', status=200)
 
 #Get student id and etag first. Then delete student and all registration information
 @app.route("/private/student/<uni>", methods=['DELETE'])
@@ -63,40 +70,65 @@ def update_student(uni):
 #Get student schema
 @app.route("/private/student/schema", methods=["GET"])
 def get_student_schema():
-	return 	jsonify(my_setting['DOMAIN']['student']['schema'])
+	return jsonify(student_schema)
 
-#Delete an attribute in student schema 
-@app.route("/private/student/schema/<attribute>", methods=['DELETE'])
-def delete_student_schema(attribute):
+#Delete attribute(one or more) in student schema
+@app.route("/private/student/schema", methods=['DELETE'])
+def delete_student_schema():
 	#check if attribute is in student schema
-	if attribute in my_setting['DOMAIN']['student']['schema'] and not attribute in my_setting['DOMAIN']['student']['additional_lookup']['field']:
-		del my_setting['DOMAIN']['student']['schema'][attribute]
-		# update eve setting in db
-		result = util.update_eve_setting('current', 'student', my_setting)
-		#restart eve service to load new schema settings
-		stop_eve_process()
-		time.sleep(0.1)
-		start_eve_process()
-		return "Successfully delete attribute '" + attribute + "'"
-	elif attribute in my_setting['DOMAIN']['student']['schema']:
-		return "Failed to delete attribute: '" + attribute + "' is primary attribute in student schema" 
-	else:
-		return "Failed to delete attribute: '" + attribute + "' is not in student schema" 
+	content = request.get_json()
+	count = 0
+	for k in content:
+		if k in student_schema.keys():
+			del student_schema[k]
+			count = count + 1
+		else:
+			print k + ' does not exists in student schema, can not delete it'
+	result = util.update_eve_setting("student", student_schema)
+	#restart eve service to load new schema settings
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) deleted", "code": 200}}', mimetype = 'application/json', status = 200)
 
-#Add an attribute in student schema
-@app.route("/private/student/schema/<attribute>", methods=['POST'])
-def add_student_schema(attribute):
-	attribute_value=request.get_json()
-	#validate attribute_value
-	#if attribute_value is valid and current schema does not have the attribute, then add attribute to schema
-	if attribute not in my_setting['DOMAIN']['student']['schema']:
-		my_setting['DOMAIN']['student']['schema'][attribute] = attribute_value
-		result = util.update_eve_setting('current', 'student', my_setting)
-		#restart eve service to load new schema settings
-		stop_eve_process()
-		time.sleep(0.1)
-		start_eve_process()
-		return "Successfully add attribute '" + attribute + "'"
+
+#Add attributes(one or more) in student schema. If attribute is already in schema, ignore it
+@app.route("/private/student/schema", methods=['POST'])
+def add_student_schema():
+	content = request.get_json()
+	count = 0
+	for k, v in content.items():
+		if k in student_schema.keys():
+			print k + ' already exists in student schema, can not add it'
+		else:
+			student_schema[k] = v
+			count += 1
+	# update the schema in mongodb
+	result = util.update_eve_setting('student', student_schema)
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	return Response('{"_status": "SUCCESS", "_success": {"message": "' + str(count) + ' column(s) added", "code": 200}}', mimetype='application/json', status=200)
+
+#Update attributes(one or more) in student schema. If attribute is not in schema, ignore it
+@app.route("/private/student/schema", methods=['PUT'])
+def update_student_schema():
+	content = request.get_json()
+	count = 0
+	for k, v in content.items():
+		if k in student_schema.keys():
+			student_schema[k] = v
+			count += 1
+		else:
+			print k + ' does not exists in student schema, can not update it'
+	# update the schema in mongodb
+	result = util.update_eve_setting('student', student_schema)
+	stop_eve_process()
+	time.sleep(0.1)
+	start_eve_process()
+	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) updated", "code": 200}}', mimetype='application/json', status=200)
+
+
 
 def stop_eve_process():
 	print "stopping student eve process..."
@@ -107,13 +139,14 @@ def start_eve_process():
 	sf.eve_process = subprocess.Popen(args)
 
 if __name__ == "__main__":
-	if(len(sys.argv) >= 3):
-		#sys.argv[1] is host address. sys.argv[2] is port number
+	if(len(sys.argv) >= 4):
+		#sys.argv[1] is host address. sys.argv[2] is port number. sys.argv[4] is shard number
 		host = sys.argv[1]
 		#I set eve service runs on different port. If current flask runs on 5000 port, eve runs on 15000 port
 		eve_port = str((int(sys.argv[2]) + 10000))
-		eve_url = 'http://' + host + ':' + eve_port + '/student/'
-		args = ['python', 'student_eve.py', host, eve_port]
+		student_num = student_num + str(int(sys.argv[3]))
+		eve_url = 'http://' + host + ':' + eve_port + '/' + student_num + '/'
+		args = ['python', 'student_eve.py', host, eve_port, sys.argv[3]]
 		#run eve service as subprocess in background
 		start_eve_process()
 		app.run(host=host, port=int(sys.argv[2]))
