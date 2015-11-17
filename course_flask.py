@@ -134,7 +134,7 @@ def course_create():
 		print 'A content(type=%s) = %s' % (type(content).__name__, content)
 		if len(content) == 0:
 			# No valid data left, return error
-			return Response('{"_status": "ERR", "_issues": {"call_number": "value format must be of five digits"},"_error": {"message": "Insertion failure: ' + str(count_invalid) + ' document(s) contain(s) error(s)", "code": 500}}', mimetype='application/json', status=422)
+			return Response('{"_status": "ERR", "_issues": {"call_number": "value format must be of five digits"},"_error": {"message": "Insertion failure: ' + str(count_invalid) + ' document(s) contain(s) error(s)", "code": 422}}', mimetype='application/json', status=422)
 		else:
 			# Otherwise, ignore invalid data and process valid data
 			headers = {'content-type': 'application/json'}
