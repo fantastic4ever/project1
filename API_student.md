@@ -147,21 +147,6 @@ POST {ServerPath}/public/student
 }
 ```
 
-**Possible Error Response**
-
-```json
-{
-    "status": 400,
-    "data": "Invalid request: Bad data."
-}
-```
-```json
-{
-    "status": 500,
-    "data": "Internal server error."
-}
-```
-
 **Possible Error Response**  
 * 404 Resource not found  
 * 500 Failed to connect to mongodb
