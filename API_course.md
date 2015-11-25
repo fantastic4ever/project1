@@ -67,7 +67,7 @@ GET {ServerPath}/public/registration
 
 
 ---
-### GET **/course/<call_number>  
+### GET **/course/_<call_number_>**  
 Retrieve a specific course by its call_name, where call_name should be exactly five digits.
 
 **Sample Request**  
@@ -174,7 +174,7 @@ POST {ServerPath}/public/course
 
 
 ---
-### DELETE **/course/<call_number>**  
+### DELETE **/course/_<call_number_>**  
 Delete course with specified call_number.
 
 **Sample Request**  
