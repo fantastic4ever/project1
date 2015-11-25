@@ -170,7 +170,7 @@ def create_course():
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return str(requests.post('http://%s:%s/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    return str(requests.post('http://%s:%s/private/course/' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 @app.route('/public/course/<cid>', methods=['GET'])
@@ -210,7 +210,7 @@ def delete_course(cid):
     logging.info("receive a delete_course request")
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid)).status_code)
+    return str(requests.delete('http://%s:%s/private/course/%s/' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
 
 
 """data manipulation api for registration"""
