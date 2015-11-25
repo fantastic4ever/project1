@@ -18,6 +18,7 @@ student_schema = util.get_eve_schema('student')
 logging.basicConfig(filename="student.log",
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 
+
 #Get all student information
 @app.route("/private/student", methods=['GET'])
 def get_all_student():
@@ -53,13 +54,13 @@ def delete_student(uni):
 		return Response(status=500)
 	registration_url = 'http://' + str(regis_info[0]['host']) + ':' + str(regis_info[0]['port']) + '/private/registration/uni/'
 	client.close()
-	#Send DELETE request to eve service to delete student
-	response = requests.delete(eve_url + student_info['_id'], headers={"If-Match" : student_info['_etag']})
-	if response.status_code > 204:
-		return response
 	#Send DELETE request to registration service
 	response2 = requests.delete(registration_url + uni)
-	return Response(response.content + '\n\n' + response2.content, mimetype='application/json', status=response2.status_code)
+	if response2.status_code != 404 and response2.status_code > 206:
+		return Response(response2.content, mimetype='application/json', status=response2.status_code)
+	#Send DELETE request to eve service to delete student
+	response = requests.delete(eve_url + student_info['_id'], headers={"If-Match" : student_info['_etag']})
+	return Response(response.content, mimetype='application/json', status=response.status_code)
 
 #Get student id and etag first. Then update it. 
 @app.route("/private/student/<uni>", methods=['PUT'])
@@ -135,7 +136,11 @@ def update_student_schema():
 	start_eve_process()
 	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) updated", "code": 200}}', mimetype='application/json', status=200)
 
-
+#Shutdown eve service
+@app.route("/private/instance/student", methods=['DELETE'])
+def shutdown_eve_service():
+	stop_eve_process()
+	return Response(status=200)
 
 def stop_eve_process():
 	print "stopping student eve process..."

@@ -38,8 +38,8 @@ GET {ServerPath}/public/registration
       "_created": "Tue, 17 Nov 2015 00:19:21 GMT",
       "_id": "564a72893fc0e71410b15fe5",
       "_etag": "8dc86c88fcaa416b40771c9e729eacf08d091166"
-    },
-    
+    }
+  ],
   "_links": {
     "self": {
       "href": "course",
