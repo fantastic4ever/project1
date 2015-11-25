@@ -19,7 +19,7 @@ def get_student_setting_template():
 	    'DOMAIN': {
 	    },
 	    'RESOURCE_METHODS': ['GET', 'DELETE', 'POST'],
-	    'ITEM_METHODS': ['GET', 'DELETE', 'PATCH']
+	    'ITEM_METHODS': ['GET', 'DELETE', 'PUT']
 	}
 
 def get_eve_schema(name):
