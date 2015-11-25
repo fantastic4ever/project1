@@ -38,8 +38,8 @@ GET {ServerPath}/public/registration
       "_created": "Tue, 17 Nov 2015 00:19:21 GMT",
       "_id": "564a72893fc0e71410b15fe5",
       "_etag": "8dc86c88fcaa416b40771c9e729eacf08d091166"
-    },
-    
+    }
+  ],
   "_links": {
     "self": {
       "href": "course",
@@ -67,7 +67,7 @@ GET {ServerPath}/public/registration
 
 
 ---
-### GET **/course/<call_number>  
+### GET **/course/_<call_number_>**  
 Retrieve a specific course by its call_name, where call_name should be exactly five digits.
 
 **Sample Request**  
@@ -174,7 +174,7 @@ POST {ServerPath}/public/course
 
 
 ---
-### DELETE **/course/<call_number>**  
+### DELETE **/course/_<call_number_>**  
 Delete course with specified call_number.
 
 **Sample Request**  

@@ -39,7 +39,7 @@ def add_for_registration_shema():
 	# update the schema in mongodb
 	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
-	#restart eve service to load new schema settings
+	# restart eve service to load new schema settings
 	stop_eve_process()
 	time.sleep(0.1)
 	start_eve_process()
@@ -60,7 +60,7 @@ def update_for_registration_shema():
 	# update the schema in mongodb
 	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
-	#restart eve service to load new schema settings
+	# restart eve service to load new schema settings
 	stop_eve_process()
 	time.sleep(0.1)
 	start_eve_process()
@@ -96,7 +96,7 @@ def delete_for_registration_shema():
 			print k + ' does not exists in registration schema, can not delete it'
 	result = db.schema.update_one({'name': 'registration'}, {'$set': {'value': my_schema['value']}})
 	print result.matched_count
-	#restart eve service to load new schema settings
+	# restart eve service to load new schema settings
 	stop_eve_process()
 	time.sleep(0.1)
 	start_eve_process()
@@ -162,7 +162,9 @@ def post_registration():
 @app.route("/private/registration", methods = ['DELETE'])
 def delete_registration():
 		response = requests.delete(eve_url)
-		return Response(response.content, mimetype='application/json', status=200)
+		#return Response(response.content, mimetype='application/json', status=200)
+		return Response('{"_status": "SUCCESS", "_success": {"message": "delete succesfully", "code": 200}}', mimetype = 'application/json', status = 200)
+
 
 @app.route("/private/registration/uni/<uni>", methods = ['DELETE'])
 def delete_registration_for_uni(uni):
@@ -176,7 +178,9 @@ def delete_registration_for_uni(uni):
 		else:
 			for item in items:
 				response = requests.delete(eve_url + '/' + item['_id'], params = payload, headers = {"If-Match": item['_etag']})
-			return Response(response.content, mimetype='application/json', status=200)
+			#return Response(response.content, mimetype='application/json', status=200)
+			return Response('{"_status": "SUCCESS", "_success": {"message": "delete succesfully", "code": 200}}', mimetype = 'application/json', status = 200)
+
 
 @app.route("/private/registration/courseid/<cid>", methods = ['DELETE'])
 def delete_registration_for_cid(cid):
@@ -190,9 +194,11 @@ def delete_registration_for_cid(cid):
 		else:
 			for item in items:
 				response = requests.delete(eve_url + '/' + item['_id'], params = payload, headers = {"If-Match": item['_etag']})
-			return Response(response.content, mimetype='application/json', status=200)
+			#return Response(response.content, mimetype='application/json', status=200)
+			return Response('{"_status": "SUCCESS", "_success": {"message": "delete succesfully", "code": 200}}', mimetype = 'application/json', status = 200)
 
-@app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['GET'])
+
+@app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['DELETE'])
 def delete_registration_for_uni_cid(uni, cid):
 		payload = {'where': '{"UNI":' + '"' + uni + '", "Course_ID":' + '"' + cid + '"}'}
 		response = requests.get(eve_url, params = payload)
@@ -204,7 +210,9 @@ def delete_registration_for_uni_cid(uni, cid):
 		else:
 			firstItem = items[0]
 			response = requests.delete(eve_url + '/' + firstItem['_id'], params = payload, headers = {"If-Match": firstItem['_etag']})
-			return Response(response.content, mimetype='application/json', status=200)
+			#return Response(response.content, mimetype='application/json', status=200)
+			return Response('{"_status": "SUCCESS", "_success": {"message": "delete succesfully", "code": 200}}', mimetype = 'application/json', status = 200)
+
 
 @app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['PUT'])
 def update_registration_for_uni_cid(uni, cid):
@@ -235,11 +243,11 @@ def start_eve_process():
 if __name__ == "__main__":
 		if(len(sys.argv) >= 3):
 			host = sys.argv[1]
-			#I set eve service runs on different port. If current flask runs on 5000 port, eve runs on 15000 port
+			# I set eve service runs on different port. If current flask runs on 5000 port, eve runs on 15000 port
 			eve_port = str((int(sys.argv[2]) + 10000))
 			eve_url = 'http://' + host + ':' + eve_port + '/registration'
 			args = ['python', 'registration_eve.py', host, eve_port]
-			#run eve service as subprocess in background
+			# run eve service as subprocess in background
 			start_eve_process()
 			app.run(host=host, port=int(sys.argv[2]))
 
