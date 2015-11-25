@@ -22,7 +22,7 @@ logging.basicConfig(filename=router_config.LOG_FILENAME,
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 DEVNULL = open(os.devnull, 'wb')
 instance_info_table = {}  # map iid/port to (instanceType,subp)
-student_shard_table = {}  # map shar to (host,port)
+student_shard_table = {}  # map shard to (host,port)
 course_iid = None
 registration_iid = None
 current_number_of_shards = 0
@@ -83,6 +83,16 @@ def retrive_student(uni):
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[str(shard_index)]
     return requests.get('http://%s:%d/private/student/%s' % (host, port, uni)).content
+
+
+# @app.route('/public/student', methods=['GET'])
+# def retrive_all_student(uni):
+#     """api for student RETRIVE ALL"""
+#     logging.info("receive a retrive_all_student request")
+#     result = 
+#     for shard_number, (host, port) in student_shard_table:
+
+#     return requests.get('http://%s:%d/private/student/%s' % (host, port, uni)).content
 
 
 @app.route('/public/student/<uni>', methods=['PUT'])
