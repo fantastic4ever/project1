@@ -67,64 +67,12 @@ GET {ServerPath}/public/student
 }
 ```
 
-**Possible Error Response**
-
-
----
-### GET **/registraion/courseid/\<cid\>**
-
-Retrieve registrations by course id.
-
-**Sample Request**
-
-GET {ServerPath}/public/registraion/cid/COMSW4771
-
-**Sample Success Response**
-
-```json
-{
-    "_items": [
-        {
-            "_updated": "Sun, 18 Oct 2015 09:11:07 GMT",
-            "_links": {
-                "self": {
-                    "href": "registration/5623622b3f5c880baff62d03",
-                    "title": "Registration"
-                }
-            },
-            "UNI": "ys2816",
-            "Course_ID": "COMSW4771",
-            "_created": "Sun, 18 Oct 2015 09:11:07 GMT",
-            "_id": "5623622b3f5c880baff62d03",
-            "_etag": "54534ad0f7ab994d19880c23106bef15ecd0af2f"
-        }
-    ],
-    "_links": {
-        "self": {
-            "href": "registration?where=Course_ID==COMSW4771",
-            "title": "registration"
-        },
-        "parent": {
-            "href": "/",
-            "title": "home"
-        }
-    },
-    "_meta": {
-        "max_results": 25,
-        "total": 1,
-        "page": 1
-    }
-}
-```
-
-**Possible Error Response**
-
-```json
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<title>404 Not Found</title>
-<h1>Not Found</h1>
-<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>
-```
+**Possible Error Response**  
+* 404 Resource not found  
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 ---
 ### GET **/student/\<uni\>**
@@ -133,7 +81,7 @@ Retrieve student by uni.
 
 **Sample Request**
 
-GET {ServerPath}/public/student/uni/ys2816
+GET {ServerPath}/public/student/uni/qs2147
 
 **Sample Success Response**
 
@@ -164,15 +112,11 @@ GET {ServerPath}/public/student/uni/ys2816
 }
 ```
 
-**Possible Error Response**
-
-```json
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<title>404 Not Found</title>
-<h1>Not Found</h1>
-<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>
-```
-
+**Possible Error Response**  
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 
 ---
@@ -218,16 +162,22 @@ POST {ServerPath}/public/student
 }
 ```
 
+**Possible Error Response**  
+* 404 Resource not found  
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 
 ---
-### PUR **/student/\<uni\>**
+### PUT **/student/\<uni\>**
 
 Update student info
 
 **Sample Request**
 
-PUT {ServerPath}/v1/users
+PUT {ServerPath}/public/student/<uni>
 
 *HTTP Body*
 ```json
@@ -258,20 +208,14 @@ PUT {ServerPath}/v1/users
 ```
 
 **Possible Error Response**
-
-```json
-{
-    "status": 400,
-    "data": "Invalid request: Bad data."
-}
-```
-```json
-{
-    "status": 500,
-    "data": "Internal server error."
-}
-```
-
+* 404 Resource not found
+* 412 Client and server etags don't match
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+* 504 Failed to connect to registration service
+* 502 Failed to delete related registration information
 
 ---
 ### DELETE **/student/\<uni\>**
@@ -281,7 +225,7 @@ Delete student by uni.
 
 **Sample Request**
 
-DELETE {ServerPath}/student/<uni>
+DELETE {ServerPath}/public/student/<uni>
 
 **Sample Success Response**
 
@@ -291,14 +235,155 @@ DELETE {ServerPath}/student/<uni>
 }
 ```
 
-**Error Response**
+**Possible Error Response**
+* 404 Resource not found
+* 412 Client and server etags don't match
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+* 504 Failed to connect to registration service
+* 502 Failed to delete related registration information
 
+---
+### GET **/student/schema** 
+View the schema of student service.
+
+**Sample Request**  
+GET {ServerPath}/public/student/schema
+
+**Sample Success Response**
 ```json
 {
-    "status": 500,
-    "data": "Internal server error."
+    "firstname": {
+        "empty": false,
+        "type": "string"
+    },
+    "lastname": {
+        "empty": false,
+        "type": "string"
+    },
+    "major": {
+        "type": "string"
+    },
+    "uni": {
+        "empty": false,
+        "type": "string",
+        "unique": true
+    }
 }
 ```
+
+**Possible Error Response**  
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+
+
+---
+### POST **/student/schema**  
+Add new columns/attributes to student schema. If a column/attribute in submitted data already exists in schema, it will be ignored and the rest will be added.
+
+**Sample Request**  
+POST {ServerPath}/public/student/schema
+###### *HTTP Body* 
+```json
+{
+    "test_attr1": {
+        "type": "string"
+    },
+    "test_attr2": {
+        "type": "integer"
+    }
+}
+```
+
+**Sample Success Response**
+```json
+{
+  "_status": "SUCCESS",
+  "_success": {
+    "message": "2 column(s) added",
+    "code": 200
+  }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+
+
+---
+### PUT **/student/schema**  
+Update existing columns/attributes in student schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be updated.
+
+**Sample Request**  
+POST {ServerPath}/public/student/schema
+###### *HTTP Body* 
+```json
+{
+    "test_attr1": {
+        "type": "integer"
+    },
+    "test_attr3": {
+        "type": "integer"
+    }
+}
+```
+
+**Sample Success Response**
+```json
+{
+  "_status": "SUCCESS",
+  "_success": {
+    "message": "1 column(s) updated",
+    "code": 200
+  }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+
+
+---
+### DELETE **/student/schema**  
+Delete student with specified uni.
+
+**Sample Request**  
+DELETE {ServerPath}/public/student/schema
+###### *HTTP Body* 
+```json
+["test_attr1", "test_attr2", "test_attr3"]
+```
+
+**Sample Success Response**
+```json
+{
+  "_status": "SUCCESS",
+  "_success": {
+    "message": "2 column(s) deleted",
+    "code": 200
+  }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to read configuration of student service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
 
 
 
