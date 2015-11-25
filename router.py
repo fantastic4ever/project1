@@ -26,6 +26,7 @@ student_shard_table = {}  # map shar to (host,port)
 course_iid = None
 registration_iid = None
 current_number_of_shards = 0
+json_headers = {'content-type': 'application/json'}
 
 
 @app.route('/public', methods=['GET'])
@@ -66,10 +67,9 @@ def create_student():
     if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[str(shard_index)]
-    print sanitized_data
-    print 'http://%s:%d/private/student' % (host, port)
-    headers = {'content-type': 'application/json'}
-    return str(requests.post('http://%s:%d/private/student' % (host, port), headers=headers, data=json.dumps(sanitized_data)).status_code)
+    # print sanitized_data
+    # print 'http://%s:%d/private/student' % (host, port)
+    return str(requests.post('http://%s:%d/private/student' % (host, port), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 """data manipulation api for student"""
 
 
@@ -99,7 +99,7 @@ def update_student(uni):
     if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[str(shard_index)]
-    return requests.put('http://%s:%d/private/student/%s' % (host, port, uni), json=sanitized_data).status_code
+    return requests.put('http://%s:%d/private/student/%s' % (host, port, uni), headers=json_headers, data=json.dumps(sanitized_data)).status_code
 
 
 @app.route('/public/student/<uni>', methods=['DELETE'])
@@ -153,7 +153,7 @@ def create_course():
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return requests.post('http://%s:%d/private/course' % (router_config.HOST, course_iid), json=sanitized_data).status_code
+    return requests.post('http://%s:%d/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code
 
 
 @app.route('/public/course/<cid>', methods=['GET'])
@@ -209,7 +209,7 @@ def create_registration(rid):
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return requests.post('http://%s:%d/private/registration' % (router_config.HOST, registration_iid), json=sanitized_data).status_code
+    return requests.post('http://%s:%d/private/registration' % (router_config.HOST, registration_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code
 
 
 @app.route('/public/registration', methods=['GET'])
