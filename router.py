@@ -61,11 +61,12 @@ def create_student():
         return "uni is not found"
     uni = sanitized_data["uni"]
     shard_index = uni_hash(uni)
-    print student_shard_table
+    logging.info(student_shard_table)
     if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[str(shard_index)]
-    print sanitized_data
+    logging.info(sanitized_data)
+    logging.info('http://%s:%d/private/student' % (host, port))
     return str(requests.post('http://%s:%d/private/student' % (host, port), data=sanitized_data).status_code)
 
 """data manipulation api for student"""
@@ -77,6 +78,7 @@ def retrive_student(uni):
     logging.info("receive a retrive_student request")
     shard_index = uni_hash(uni)
     if shard_index not in student_shard_table:
+        logging.info(student_shard_table)
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[shard_index]
     return requests.get('http://%s:%d/private/student/%s' % (host, port, uni)).content
@@ -325,7 +327,7 @@ def delete_instance(iid):  # port is also the instance id
 
 
 def uni_hash(uni):
-    return uni.__hash__() % router_config.NUMBER_OF_SHARD
+    return str(uni.__hash__() % router_config.NUMBER_OF_SHARD)
 
 
 def getSanitizedJson(original_json):
