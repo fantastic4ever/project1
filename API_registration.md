@@ -257,8 +257,6 @@ POST {ServerPath}/public/registraion
 * 500 Failed to connect to eve service
 * 500 Unexpected internal error
 
-@app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['PUT'])
-
 
 ---
 ### DELETE **/registration**
@@ -481,6 +479,7 @@ PUT {ServerPath}/public/registration/schema
 ```
 
 **Sample Success Response**
+```json
 {
     "_status": "SUCCESS",
     "_success": {
@@ -497,7 +496,7 @@ PUT {ServerPath}/public/registration/schema
 
 
 ---
-### DELETE **/registration/schema**  
+### DELETE **/registration/schema**   
 Delete existing columns/attributes in registration schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be deleted.
 
 **Sample Request**  
@@ -508,6 +507,7 @@ DELETE {ServerPath}/public/registration/schema
 ```
 
 **Sample Success Response**
+```json
 {
     "_status": "SUCCESS",
     "_success": {
