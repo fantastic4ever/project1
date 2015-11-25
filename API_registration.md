@@ -77,10 +77,9 @@ GET {ServerPath}/public/registration
 }
 ```
 
-**Possible Error Response**
-* 404 Resource not found  
-* 500 Failed to connect to mongodb
-* 500 Failed to connect to eve service
+**Possible Error Response**  
+* 500 Failed to connect to mongodb  
+* 500 Failed to connect to eve service  
 * 500 Unexpected internal error
 
 ---
@@ -130,11 +129,11 @@ GET {ServerPath}/public/registraion/cid/COMSW4771
 }
 ```
 
-**Possible Error Response**
+**Possible Error Response**  
 * 404 Resource not found  
-* 500 Failed to connect to mongodb
-* 500 Failed to connect to eve service
-* 500 Unexpected internal error
+* 500 Failed to connect to mongodb  
+* 500 Failed to connect to eve service  
+* 500 Unexpected internal error  
 
 ---
 ### GET **/registraion/uni/\<uni\>**
@@ -495,6 +494,7 @@ PUT {ServerPath}/public/registration/schema
 * 500 Failed to connect to mongodb
 * 500 Failed to connect to eve service
 * 500 Unexpected internal error
+
 
 ---
 ### DELETE **/registration/schema**  
