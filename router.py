@@ -66,6 +66,8 @@ def create_student():
         return "500: student instance %s is not started" % shard_index
     host, port = student_shard_table[str(shard_index)]
     print sanitized_data
+    print 'http://%s:%d/private/student' % (host, port)
+    headers = {'content-type': 'application/json'}
     return str(requests.post('http://%s:%d/private/student' % (host, port), data=sanitized_data).status_code)
 
 """data manipulation api for student"""
@@ -76,9 +78,9 @@ def retrive_student(uni):
     """api for student RETRIVE"""
     logging.info("receive a retrive_student request")
     shard_index = uni_hash(uni)
-    if shard_index not in student_shard_table:
+    if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
-    host, port = student_shard_table[shard_index]
+    host, port = student_shard_table[str(shard_index)]
     return requests.get('http://%s:%d/private/student/%s' % (host, port, uni)).content
 
 
@@ -93,9 +95,9 @@ def update_student(uni):
     except Exception, e:
         return "invalid request"
     shard_index = uni_hash(uni)
-    if shard_index not in student_shard_table:
+    if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
-    host, port = student_shard_table[shard_index]
+    host, port = student_shard_table[str(shard_index)]
     return requests.put('http://%s:%d/private/student/%s' % (host, port, uni), json=sanitized_data).status_code
 
 
@@ -104,9 +106,9 @@ def delete_student(uni):
     """api for student DELETE"""
     logging.info("receive a delete_student request")
     shard_index = uni_hash(uni)
-    if shard_index not in student_shard_table:
+    if str(shard_index) not in student_shard_table:
         return "500: student instance %s is not started" % shard_index
-    host, port = student_shard_table[shard_index]
+    host, port = student_shard_table[str(shard_index)]
     return requests.delete('http://%s:%d/private/student/%s' % (host, port, uni)).status_code
 
 """data definition api for student"""

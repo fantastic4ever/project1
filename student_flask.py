@@ -5,6 +5,7 @@ import sys, subprocess
 import os, signal, time
 import student_flask as sf
 import json
+import logging
 import util
 from util import mongo_url
 
@@ -14,6 +15,8 @@ global eve_process
 global args
 student_num = 'student'
 student_schema = util.get_eve_schema('student')
+logging.basicConfig(filename="student.log",
+                    level=logging.INFO, format='%(asctime)s --- %(message)s')
 
 #Get all student information
 @app.route("/private/student", methods=['GET'])
@@ -30,6 +33,8 @@ def get_student(uni):
 #Add student information. Flask just redirect POST request to eve service 
 @app.route("/private/student", methods=['POST'])
 def add_student():
+	logging.info(student_num + " service: receive a creating student request")
+	logging.info(request.get_json())
 	response = requests.post(eve_url, data=request.get_json())
 	return Response(response.content, mimetype='application/json', status=200)
 
