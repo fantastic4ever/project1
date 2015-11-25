@@ -22,13 +22,13 @@ logging.basicConfig(filename="student.log",
 @app.route("/private/student", methods=['GET'])
 def get_all_student():
 	response = requests.get(eve_url)
-	return Response(response.content, mimetype='application/json', status=200)
+	return Response(response.content, mimetype='application/json', status=response.status_code)
 
 #Get student information by uni. Flask just redirect GET request to eve service
 @app.route("/private/student/<uni>", methods=['GET'])
 def get_student(uni):
 	response = requests.get(eve_url + uni)
-	return Response(response.content, mimetype='application/json', status=200)
+	return Response(response.content, mimetype='application/json', status=response.status_code)
 
 #Add student information. Flask just redirect POST request to eve service 
 @app.route("/private/student", methods=['POST'])
@@ -36,7 +36,7 @@ def add_student():
 	logging.info(student_num + " service: receive a creating student request")
 	logging.info(request.get_json())
 	response = requests.post(eve_url, data=request.get_json())
-	return Response(response.content, mimetype='application/json', status=200)
+	return Response(response.content, mimetype='application/json', status=response.status_code)
 
 #Get student id and etag first. Then delete student and all registration information
 @app.route("/private/student/<uni>", methods=['DELETE'])
@@ -50,14 +50,14 @@ def delete_student(uni):
 	client = MongoClient(mongo_url)
 	regis_info = client.project1.instance_info.find({'instanceType' : 'registration'})
 	if(regis_info.count() == 0):
-		return 'Error : Registartion service is not running'
+		return Response(status=500)
 	registration_url = 'http://' + str(regis_info[0]['host']) + ':' + str(regis_info[0]['port']) + '/private/registration/uni/'
 	client.close()
 	#Send DELETE request to eve service to delete student
 	response = requests.delete(eve_url + student_info['_id'], headers={"If-Match" : student_info['_etag']})
 	#Send DELETE request to registration service
 	response2 = requests.delete(registration_url + uni)
-	return response.content + '\n\n' + response2.content
+	return Response(response.content + '\n\n' + response2.content, mimetype='application/json', status=response.status_code)
 
 #Get student id and etag first. Then update it. 
 @app.route("/private/student/<uni>", methods=['PATCH'])
