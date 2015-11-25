@@ -159,7 +159,7 @@ def delete_column_of_student_scheme():
 """data manipulation api for course"""
 
 
-@app.route('/public/course', methods=['POST'])
+@app.route('/public/course/', methods=['POST'])
 def create_course():
     logging.info("receive a create_course request")
     if not course_iid:  # iid is port
