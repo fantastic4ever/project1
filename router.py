@@ -127,33 +127,51 @@ def delete_student(uni):
 """data definition api for student"""
 
 
-@app.route('/public/student/scheme', methods=['POST'])
-def create_new_column_for_student_scheme():
-    logging.info("receive a create_new_column_for_student_scheme request")
-    host, port = student_shard_table[0]
-    return str(requests.post("http://%s:%s/private/student/scheme" % (host, port), params=request.args).status_code)
+@app.route('/public/student/schema', methods=['POST'])
+def create_new_column_for_student_schema():
+    logging.info("receive a create_new_column_for_student_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    host, port = student_shard_table["0"]
+    return str(requests.post("http://%s:%s/private/student/schema" % (host, port), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
-@app.route('/public/student/scheme', methods=['GET'])
-def retrive_student_scheme():
-    logging.info("receive a retrive_student_scheme request")
-    host, port = student_shard_table[0]
-    response = requests.get("http://%s:%s/private/student/scheme" % (host, port))
+@app.route('/public/student/schema', methods=['GET'])
+def retrive_student_schema():
+    logging.info("receive a retrive_student_schema request")
+    host, port = student_shard_table["0"]
+    response = requests.get("http://%s:%s/private/student/schema" % (host, port))
     return Response(response.content, mimetype='application/json', status=200)
 
 
-@app.route('/public/student/scheme', methods=['PUT'])
-def update_column_of_student_scheme():
-    logging.info("receive a update_column_of_student_scheme request")
-    host, port = student_shard_table[0]
-    return str(requests.put("http://%s:%s/private/student/scheme" % (host, port), params=request.args).status_code)
+@app.route('/public/student/schema', methods=['PUT'])
+def update_column_of_student_schema():
+    logging.info("receive a update_column_of_student_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    host, port = student_shard_table["0"]
+    return str(requests.put("http://%s:%s/private/student/schema" % (host, port), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
-@app.route('/public/student/scheme', methods=['DELETE'])
-def delete_column_of_student_scheme():
-    logging.info("receive a delete_column_of_student_scheme request")
-    host, port = student_shard_table[0]
-    return str(requests.delete("http://%s:%s/private/student/scheme" % (host, port), params=request.args).status_code)
+@app.route('/public/student/schema', methods=['DELETE'])
+def delete_column_of_student_schema():
+    logging.info("receive a delete_column_of_student_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    host, port = student_shard_table["0"]
+    return str(requests.delete("http://%s:%s/private/student/schema" % (host, port), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 """data manipulation api for course"""
@@ -216,8 +234,8 @@ def delete_course(cid):
 """data manipulation api for registration"""
 
 
-@app.route('/public/registration/<rid>', methods=['POST'])
-def create_registration(rid):
+@app.route('/public/registration', methods=['POST'])
+def create_registration():
     logging.info("receive a create_registration request")
     if not registration_iid:  # iid is port
         return "500: registration instance is not started"
@@ -239,12 +257,21 @@ def retrive_all_registration():
     return Response(response.content, mimetype='application/json', status=200)
 
 
-@app.route('/public/registration/<rid>', methods=['GET'])
-def retrive_registration(rid):
-    logging.info("receive a retrive_registration request")
+@app.route('/public/registration/uni/<uni>', methods=['GET'])
+def retrive_registration_from_uni(uni):
+    logging.info("receive a retrive_registration_from_uni request")
     if not registration_iid:  # iid is port
         return "500: registration instance is not started"
-    response = requests.get('http://%s:%s/private/registration/%s' % (router_config.HOST, registration_iid, rid))
+    response = requests.get('http://%s:%s/private/registration/uni/%s' % (router_config.HOST, registration_iid, uni))
+    return Response(response.content, mimetype='application/json', status=200)
+
+
+@app.route('/public/registration/courseid/<courseid>', methods=['GET'])
+def retrive_registration_from_courseid(courseid):
+    logging.info("receive a retrive_registration_from_courseid request")
+    if not registration_iid:  # iid is port
+        return "500: registration instance is not started"
+    response = requests.get('http://%s:%s/private/registration/courseid/%s' % (router_config.HOST, registration_iid, courseid))
     return Response(response.content, mimetype='application/json', status=200)
 
 
@@ -262,12 +289,32 @@ def update_registration(rid):
     return str(requests.put('http://%s:%s/private/registration/%s' % (router_config.HOST, registration_iid, rid)).status_code)
 
 
-@app.route('/public/registration/<rid>', methods=['DELETE'])
-def delete_registration(rid):
-    logging.info("receive a delete_registration request")
+# @app.route('/public/registration/<rid>', methods=['DELETE'])
+# def delete_registration(rid):
+#     logging.info("receive a delete_registration request")
+#     if not registration_iid:  # iid is port
+#         return "500: registration instance is not started"
+#     return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, registration_iid, rid)).status_code)
+
+
+@app.route('/public/registration/uni/<uni>', methods=['DELETE'])
+def delete_registration_from_uni(uni):
+    logging.info("receive a delete_registration_from_uni request")
     if not registration_iid:  # iid is port
         return "500: registration instance is not started"
-    return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, registration_iid, rid)).status_code)
+    response = requests.delete('http://%s:%s/private/registration/uni/%s' % (router_config.HOST, registration_iid, uni))
+    return Response(response.content, mimetype='application/json', status=200)
+
+
+@app.route('/public/registration/courseid/<courseid>', methods=['DELETE'])
+def delete_registration_from_courseid(courseid):
+    logging.info("receive a delete_registration_from_courseid request")
+    if not registration_iid:  # iid is port
+        return "500: registration instance is not started"
+    response = requests.delete('http://%s:%s/private/registration/courseid/%s' % (router_config.HOST, registration_iid, courseid))
+    return Response(response.content, mimetype='application/json', status=200)
+
+
 
 """api for creating new microservice instance"""
 # TODO: store the instance pid into db in case of failure of router process
