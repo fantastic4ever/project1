@@ -45,32 +45,34 @@ def delete_student(uni):
 	response = requests.get(eve_url + uni)
 	student_info = response.json()
 	if response.status_code > 206:    #Fail to get student information by uni
-		return response.content
+		return Response(response.content, mimetype='application/json', status=response.status_code)
 	#Get registration status from MongoDB instance_info collection. If registration service is not running, return
 	client = MongoClient(mongo_url)
 	regis_info = client.project1.instance_info.find({'instanceType' : 'registration'})
-	if(regis_info.count() == 0):
+	if regis_info.count() == 0:
 		return Response(status=500)
 	registration_url = 'http://' + str(regis_info[0]['host']) + ':' + str(regis_info[0]['port']) + '/private/registration/uni/'
 	client.close()
 	#Send DELETE request to eve service to delete student
 	response = requests.delete(eve_url + student_info['_id'], headers={"If-Match" : student_info['_etag']})
+	if response.status_code > 204:
+		return response
 	#Send DELETE request to registration service
 	response2 = requests.delete(registration_url + uni)
-	return Response(response.content + '\n\n' + response2.content, mimetype='application/json', status=response.status_code)
+	return Response(response.content + '\n\n' + response2.content, mimetype='application/json', status=response2.status_code)
 
 #Get student id and etag first. Then update it. 
-@app.route("/private/student/<uni>", methods=['PATCH'])
+@app.route("/private/student/<uni>", methods=['PUT'])
 def update_student(uni):
 	#Get student information
 	response = requests.get(eve_url + uni)
 	student_info = response.json()
 	print request.get_json()
-	if response.status_code > 206:    #Fail to get student information by uni
-		return response.content
+	if response.status_code > 204:    #Fail to get student information by uni
+		return Response(response.content, mimetype='application/json', status=response.status_code)
 	#Send PATCH request to eve service to update student information
-	response = requests.patch(eve_url + student_info['_id'], data=request.get_json(), headers={"If-Match" : student_info['_etag']})
-	return response.content
+	response = requests.put(eve_url + student_info['_id'], data=request.get_json(), headers={"If-Match" : student_info['_etag']})
+	return Response(response.content, mimetype='application/json', status=response.status_code)
 
 #Get student schema
 @app.route("/private/student/schema", methods=["GET"])
