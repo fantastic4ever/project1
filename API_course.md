@@ -54,7 +54,7 @@ GET {ServerPath}/public/registration
     "max_results": 25,
     "total": 2,
     "page": 1
-  }
+  }]
 }
 ```
 
