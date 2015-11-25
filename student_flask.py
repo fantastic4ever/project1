@@ -137,7 +137,7 @@ def update_student_schema():
 	return Response('{"_status": "SUCCESS", "_success": {"message": "'+str(count)+' column(s) updated", "code": 200}}', mimetype='application/json', status=200)
 
 #Shutdown eve service
-@app.route("private/instance/student", methods=['DELETE'])
+@app.route("/private/instance/student", methods=['DELETE'])
 def shutdown_eve_service():
 	stop_eve_process()
 	return Response(status=200)
