@@ -8,6 +8,7 @@ import logging
 import urllib
 import subprocess
 import os
+import json
 from pymongo import MongoClient
 from collections import OrderedDict
 
@@ -68,7 +69,7 @@ def create_student():
     print sanitized_data
     print 'http://%s:%d/private/student' % (host, port)
     headers = {'content-type': 'application/json'}
-    return str(requests.post('http://%s:%d/private/student' % (host, port), data=sanitized_data).status_code)
+    return str(requests.post('http://%s:%d/private/student' % (host, port), headers=headers, data=json.dumps(sanitized_data)).status_code)
 
 """data manipulation api for student"""
 
