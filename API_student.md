@@ -81,7 +81,7 @@ Retrieve student by uni.
 
 **Sample Request**
 
-GET {ServerPath}/public/student/uni/qs2147
+GET {ServerPath}/public/student/qs2147
 
 **Sample Success Response**
 
@@ -162,7 +162,7 @@ Update student info
 
 **Sample Request**
 
-PUT {ServerPath}/public/student/<uni>
+PUT {ServerPath}/public/student/qs2147
 
 *HTTP Body*
 ```json
@@ -210,7 +210,7 @@ Delete student by uni.
 
 **Sample Request**
 
-DELETE {ServerPath}/public/student/<uni>
+DELETE {ServerPath}/public/student/qs2147
 
 **Sample Success Response**
 
