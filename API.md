@@ -78,7 +78,10 @@ GET {ServerPath}/public/registration
 ```
 
 **Possible Error Response**
-
+* 404 Resource not found  
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 ---
 ### GET **/registraion/courseid/\<cid\>**
@@ -128,13 +131,10 @@ GET {ServerPath}/public/registraion/cid/COMSW4771
 ```
 
 **Possible Error Response**
-
-```json
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<title>404 Not Found</title>
-<h1>Not Found</h1>
-<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>
-```
+* 404 Resource not found  
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 ---
 ### GET **/registraion/uni/\<uni\>**
@@ -212,13 +212,10 @@ GET {ServerPath}/public/registraion/uni/ys2816
 ```
 
 **Possible Error Response**
-
-```json
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<title>404 Not Found</title>
-<h1>Not Found</h1>
-<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>
-```
+* 404 Resource not found  
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 
 
@@ -234,309 +231,293 @@ POST {ServerPath}/public/registraion
 *HTTP Body*
 ```json
 {
-	"username": "RahXephone",
-	"password": "dolem",
-	"name": {
-		"first": "Olin",
-		"last": "Staccato"
-	},
-	"gender": 2,
-	"contactInfo": {
-		"email": "os@gmail.com"
-	}
+  "UNI": "ck5945",
+  "Course_ID": "COMSW4444"
 }
 ```
 
 **Sample Success Response**
-
-*HTTP Header*
-```
-Location:{ServerPath}/v1/users/9999
-```
-*HTTP Body*
 ```json
 {
-	"status": 201
+    "_updated": "Wed, 25 Nov 2015 06:27:24 GMT",
+    "_links": {
+        "self": {
+            "href": "registration/565554cc3f5c880c1ca9d506",
+            "title": "Registration"
+        }
+    },
+    "_created": "Wed, 25 Nov 2015 06:27:24 GMT",
+    "_status": "OK",
+    "_id": "565554cc3f5c880c1ca9d506",
+    "_etag": "82e3596a187204874c5f1268d30a0bf5260eb1b1"
 }
 ```
 
 **Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
-```json
-{
-	"status": 400,
-    "data": "Invalid request: Bad data."
-}
-```
-```json
-{
-	"status": 500,
-	"data": "Internal server error."
-}
-```
-
+@app.route("/private/registration/uni/<uni>/courseid/<cid>", methods = ['PUT'])
 
 
 ---
-### PUT **/v1/users**
+### DELETE **/registration**
 
-Update user info in batch with complete info.
-
-
-**Request Body**
-
-| Attribute | Validate   | Type   | Value | Default | Note |
-|:---------:|:------:|:--------:|:-----:|:-----:|:-----:|
-|userId	|required	|string	|	|	|Rule to be designed.  |
-|password	|required	|string	|	|	|Rule to be designed.  |
-|name	|required	|JSONObject	|	|	|	|
-|name.first	|required	|string	|	|	|   |
-|name.middle	|required	|string	|	|	|  |
-|name.last	|required	|string	|	|	|   |
-|gender	|required	|int	|0/1/2	|	|Filter users by gender. Value 0 for unspecified; 1 for male; 2 for female.|
-|contact	|required	|JSONObject	|	|	|  |
-|contact.email	|required	|string	|	|	|  |
-|contact.phone	|required	|string	|	|	|  |
+Delete all registration info.
 
 **Sample Request**
 
-PUT {ServerPath}/v1/users
-
-*HTTP Body*
-```json
-{
-	"userId": "9999",
-	"password": "dolem",
-	"name": {
-		"first": "Olin",
-		"last": "Staccato"
-	},
-	"gender": 2,
-	"contactInfo": {
-		"email": "os@gmail.com",
-		"phone": "",
-	}
-}
-```
+DELETE {ServerPath}/public/registration
 
 **Sample Success Response**
-
 ```json
 {
-	"status": 200
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "delete succesfully",
+        "code": 200
+    }
 }
 ```
 
 **Possible Error Response**
-
-```json
-{
-	"status": 400,
-	"data": "Invalid request: Bad data."
-}
-```
-```json
-{
-	"status": 500,
-	"data": "Internal server error."
-}
-```
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 
 ---
-### DELETE **/v1/users**
+### DELETE **/registration/uni/\<uni\>**
 
-Delete all users.
-
+Delete the registration info of the student with the correspoinding uni.
 
 **Sample Request**
 
-DELETE {ServerPath}/v1/users
+DELETE {ServerPath}/public/registration/uni/ck5945
 
 **Sample Success Response**
-
 ```json
 {
-	"status": 200
-}
-```
-
-**Error Response**
-
-```json
-{
-	"status": 500,
-	"data": "Internal server error."
-}
-```
-
-
----
-### POST **/v1/users/:id**
-
-Invalid request. <br>
-* If adding new users, see "POST /v1/users".
-
-
-**Error Response**
-```json
-{
-	"status": 400,
-	"data": "Invalid request: Method not allowed."
-}
-```
-
-
-
----
-### PUT **/v1/users/:id**
-
-Update a user given id with complete info. Same effect as PUT /v1/users with id in request body.
-
-
-**Request Body**
-
-| Attribute | Validate   | Type   | Value | Default | Note |
-|:---------:|:------:|:--------:|:-----:|:-----:|:-----:|
-|password	|required	|string	|	|	|Rule to be designed.  |
-|name	|required	|JSONObject	|	|	|	|
-|name.first	|required	|string	|	|	|  |
-|name.middle	|required	|string	|	|	|  |
-|name.last	|required	|string	|	|	|  |
-|gender	|required	|int	|0/1/2	|	|Filter users by gender. Value 0 for unspecified; 1 for male; 2 for female.|
-|contact	|required	|JSONObject	|	|	|	|
-|contact.email	|required	|string	|	|	|  |
-|contact.phone	|required	|string	|	|	|  |
-
-**Sample Request**
-
-PUT {ServerPath}/v1/users/9999
-
-*HTTP Body*
-```json
-{
-	"password": "dolemmelod",
-	"name": {
-		"first": "Olin",
-		"middle": "",
-		"last": "Spaghetti"
-	},
-	"gender": 1,
-	"contactInfo": {
-		"email": "os@gmail.com",
-		"phone": "",
-	}
-}
-```
-
-**Sample Success Response**
-
-```json
-{
-	"status": 200
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "delete succesfully",
+        "code": 200
+    }
 }
 ```
 
 **Possible Error Response**
-
-```json
-{
-	"status": 400,
-	"data": "Error Message"
-}
-```
-```json
-{
-	"status": 500,
-	"data": "Error Message"
-}
-```
-
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 
 ---
-### PATCH **/v1/users/:id**
+### DELETE **/registration/courseid/\<cid\>**
 
-Update a user given id with partial info. Same effect as PATCH /v1/users with id in request body.
-
-
-**Request Body**
-
-| Attribute | Validate   | Type   | Value | Default | Note |
-|:---------:|:------:|:--------:|:-----:|:-----:|:-----:|
-|password	|optional	|string	|	|	|Rule to be designed.  |
-|name	|optional	|JSONObject	|	|	|	|
-|name.first	|optional	|string	|	|	|  |
-|name.middle	|optional	|string	|	|	|  |
-|name.last	|optional	|string	|	|	|  |
-|gender	|optional	|int	|0/1/2	|	|Filter users by gender. Value 0 for unspecified; 1 for male; 2 for female.|
-|contact	|optional	|JSONObject	|	|	|	|
-|contact.email	|optional	|string	|	|	|  |
-|contact.phone	|optional	|string	|	|	|  |
+Delete the registration info of the course with the correspoinding course id.
 
 **Sample Request**
 
-PATCH {ServerPath}/v1/users/9999
-
-*HTTP Body*
-```json
-{
-	"password": "dolemmelod",
-	"name": {
-		"last": "Spaghetti"
-	}
-}
-```
+DELETE {ServerPath}/public/registration/courseid/COMSW4444
 
 **Sample Success Response**
-
 ```json
 {
-	"status": 201
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "delete succesfully",
+        "code": 200
+    }
 }
 ```
 
 **Possible Error Response**
-
-```json
-{
-	"status": 400,
-	"data": "Error Message"
-}
-```
-```json
-{
-	"status": 500,
-	"data": "Error Message"
-}
-```
-
-
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
 ---
-### DELETE **/v1/users/:id**
+### DELETE **/registration/uni/\<uni\>/courseid/\<cid\>**
 
-Delete a user given id.
-
+Delete the registration info of the student with the corresponding uni and the course with the corresponding course id.
 
 **Sample Request**
 
-DELETE {ServerPath}/v1/users/3999
+DELETE {ServerPath}/public/registration/uni/ck5945/courseid/COMSW4444
 
 **Sample Success Response**
-
 ```json
 {
-	"status": 200
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "delete succesfully",
+        "code": 200
+    }
 }
 ```
 
-**Error Response**
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
 
+
+---
+### PUT **/registration/uni/\<uni\>/courseid/\<cid\>**
+
+Update the registration info of the student with the corresponding uni and the course with the corresponding course id.
+
+**Sample Request**
+
+PUT {ServerPath}/public/registration/uni/ys2816/courseid/COMSW4771
+
+**Sample Success Response**
 ```json
 {
-	"status": 500,
-	"data": "Internal server error."
+    "_updated": "Wed, 25 Nov 2015 06:51:59 GMT",
+    "_links": {
+        "self": {
+            "href": "registration/5623622b3f5c880baff62d03",
+            "title": "Registration"
+        }
+    },
+    "_created": "Sun, 18 Oct 2015 09:11:07 GMT",
+    "_status": "OK",
+    "_id": "5623622b3f5c880baff62d03",
+    "_etag": "6c7aac19e416e4e1c9e92e23bada26a5d8da8d07"
 }
 ```
 
+**Possible Error Response**
+* 404 Not Found
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+
+@app.route("/private/registration/schema", methods = ['PUT'])
+@app.route("/private/registration/schema", methods = ['DELETE'])
+
+---
+### GET **/registration/schema**
+
+View the schema of registration service.
+
+**Sample Request**
+
+GET {ServerPath}/public/registration/schema
+
+**Sample Success Response**
+```json
+{
+    "Course_ID": {
+        "type": "string"
+    },
+    "Lecturer": {
+        "type": "dict"
+    },
+    "UNI": {
+        "type": "string"
+    }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+---
+### POST **/registration/schema**  
+Add new columns/attributes to registration schema. If a column/attribute in submitted data already exists in schema, it will be ignored and the rest will be added.
+
+**Sample Request**  
+POST {ServerPath}/public/registration/schema
+###### *HTTP Body* 
+```json
+{
+    "Grade": {
+        "type": "string"
+    },
+    "Title": {
+        "type": "string"
+    }
+}
+```
+
+**Sample Success Response**
+```json
+{
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "2 column(s) added",
+        "code": 200
+    }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+---
+### PUT **/registration/schema**  
+Update existing columns/attributes in registration schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be updated.
+
+**Sample Request**  
+PUT {ServerPath}/public/registration/schema
+###### *HTTP Body* 
+```json
+{
+  "Grade": {
+  "type": "Interger"
+  },
+  "Title": {
+  "type": "Integer"
+  }
+}
+```
+
+**Sample Success Response**
+{
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "2 column(s) updated",
+        "code": 200
+    }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+---
+### DELETE **/registration/schema**  
+Delete existing columns/attributes in registration schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be deleted.
+
+**Sample Request**  
+DELETE {ServerPath}/public/registration/schema
+###### *HTTP Body* 
+```json
+["Grade", "Lecturer"]
+```
+
+**Sample Success Response**
+{
+    "_status": "SUCCESS",
+    "_success": {
+        "message": "2 column(s) deleted",
+        "code": 200
+    }
+}
+```
+
+**Possible Error Response**
+* 500 Failed to connect to mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
