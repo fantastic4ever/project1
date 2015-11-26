@@ -12,6 +12,7 @@ import signal
 import json
 from pymongo import MongoClient
 from collections import OrderedDict
+import httplib
 
 import credentials
 import router_config
@@ -177,7 +178,7 @@ def delete_column_of_student_schema():
 """data manipulation api for course"""
 
 
-@app.route('/public/course/', methods=['POST'])
+@app.route('/public/course', methods=['POST'])
 def create_course():
     logging.info("receive a create_course request")
     if not course_iid:  # iid is port
@@ -188,7 +189,7 @@ def create_course():
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return str(requests.post('http://%s:%s/private/course/' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    return str(requests.post('http://%s:%s/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 @app.route('/public/course/<cid>', methods=['GET'])
@@ -200,7 +201,7 @@ def retrive_course(cid):
     return Response(response.content, mimetype='application/json', status=200)
 
 
-@app.route('/public/course/', methods=['GET'])
+@app.route('/public/course', methods=['GET'])
 def retrive_all_course():
     logging.info("receive a retrive_all_course request")
     if not course_iid:
@@ -220,7 +221,10 @@ def update_course(cid):
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return str(requests.put('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid)).status_code)
+    conn = httplib.HTTPConnection('%s:%s' % (router_config.HOST, course_iid))
+    conn.request("PUT", "/private/course/%s/" % cid, json.dumps(sanitized_data), json_headers)
+    return str(conn.getresponse().read())
+    # return str(requests.put('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid)).status_code)
 
 
 @app.route('/public/course/<cid>', methods=['DELETE'])
@@ -228,7 +232,8 @@ def delete_course(cid):
     logging.info("receive a delete_course request")
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.delete('http://%s:%s/private/course/%s/' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
+    return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
+
 
 
 """data manipulation api for registration"""
@@ -275,8 +280,8 @@ def retrive_registration_from_courseid(courseid):
     return Response(response.content, mimetype='application/json', status=200)
 
 
-@app.route('/public/registration/<rid>', methods=['PUT'])
-def update_registration(rid):
+@app.route('/public/registration/uni/<uni>/courseid/<cid>', methods=['PUT'])
+def update_registration(uni, cid):
     logging.info("receive a update_registration request")
     if not registration_iid:  # iid is port
         return "500: registration instance is not started"
@@ -286,7 +291,10 @@ def update_registration(rid):
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return str(requests.put('http://%s:%s/private/registration/%s' % (router_config.HOST, registration_iid, rid)).status_code)
+    conn = httplib.HTTPConnection('%s:%s' % (router_config.HOST, registration_iid))
+    conn.request("PUT", "/private/registration/uni/%s/courseid/%s" % (uni, cid), json.dumps(sanitized_data), json_headers)
+    return str(conn.getresponse().read())
+    # return str(requests.put('http://%s:%s/private/registration/uni/%s/courseid/%s' % (router_config.HOST, registration_iid, uni, cid)).status_code)
 
 
 @app.route('/public/registration/uni/<uni>', methods=['DELETE'])
