@@ -152,6 +152,8 @@ def course_create():
 @app.route("/private/course/<call_number>/", methods = ['PUT'])
 def course_update(call_number):
 	print 'Recieved PUT course request'
+	# print 'request.data = %s' % (request.data)
+	# print 'request.headers = %s' % (request.headers)
 	try:
 		# Get course information
 		response = requests.get(eve_base_url + '/' + str(call_number))
@@ -162,11 +164,11 @@ def course_update(call_number):
 
 		# Update data of specified call_number
 		attributes_to_update = request.get_json(force = True)
-		print 'attributes_to_update(type=%s) = %s' % (type(attributes_to_update).__name__, attributes_to_update)
+		# print 'attributes_to_update(type=%s) = %s' % (type(attributes_to_update).__name__, attributes_to_update)
 		client = MongoClient(mongo_url)
 		db = client.project1
 		for attribute in attributes_to_update:
-			print "attribute = %s" % (attribute)
+			# print "attribute = %s" % (attribute)
 			if attribute == 'call_number':
 				return Response('{"_status": "ERR", "_error": {"message": "Modification of lookup field is not allowed", "code": 405}}', mimetype='application/json', status=405)
 			else:
@@ -186,24 +188,22 @@ def course_update(call_number):
 		# Get course information and generate response
 		response = requests.get(eve_base_url + '/' + str(call_number))
 		course_info = response.json()
-		print course_info
+		# print course_info
 		if response.status_code > 204:
 			# Fail to get course information by call_number
 			return Response(response.content, mimetype='application/json', status=response.status_code)
-
-		print '{"_updated": "'+course_info['_updated']+'", "_links": {"self": {"href": "'+course_info['_links']['self']['href']+'", "title": "'+course_info['_links']['self']['title']+'"}}, "_created": "'+course_info['_created']+'", "_status": "OK", "_id": "'+course_info['_id']+'", "_etag": "'+course_info['_etag']+'"}'
 		return Response('{"_updated": "'+course_info['_updated']+'", "_links": {"self": {"href": "'+course_info['_links']['self']['href']+'", "title": "'+course_info['_links']['self']['title']+'"}}, "_created": "'+course_info['_created']+'", "_status": "OK", "_id": "'+course_info['_id']+'", "_etag": "'+course_info['_etag']+'"}', mimetype='application/json', status=200)
 	except Exception as e:
 		if type(e).__name__ == 'ConnectionError':
-			print 'Error: Cannot connect to eve'
-			raise EveUnavailable
+			print 'Error: Cannot connect to MongoDb'
+			raise MongoDbUnavailable
 		else:
 			print 'Error: %s when update course in eve' % (type(e).__name__)
 			raise e
 
 @app.route("/private/course/<call_number>", methods = ['DELETE'])
 @app.route("/private/course/<call_number>/", methods = ['DELETE'])
-def delete_registration_for_uni(call_number):
+def course_delete(call_number):
 	print 'Recieved DELETE specific schema request'
 	try:
 		response = requests.delete(eve_base_url + '/' + str(call_number), headers = request.headers)
