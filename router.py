@@ -235,6 +235,59 @@ def delete_course(cid):
     return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
 
 
+"""data definition api for course"""
+
+
+@app.route('/public/course/schema', methods=['POST'])
+def create_new_column_for_course_schema():
+    logging.info("receive a create_new_column_for_course_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    if not course_iid:
+        return "500: course instance is not started"
+    return str(requests.post("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+
+
+@app.route('/public/course/schema', methods=['GET'])
+def retrive_course_schema():
+    logging.info("receive a retrive_course_schema request")
+    if not course_iid:
+        return "500: course instance is not started"
+    response = requests.get("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid))
+    return Response(response.content, mimetype='application/json', status=200)
+
+
+@app.route('/public/course/schema', methods=['PUT'])
+def update_column_of_course_schema():
+    logging.info("receive a update_column_of_course_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    if not course_iid:
+        return "500: course instance is not started"
+    return str(requests.put("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+
+
+@app.route('/public/course/schema', methods=['DELETE'])
+def delete_column_of_course_schema():
+    logging.info("receive a delete_column_of_course_schema request")
+    original_json = request.get_json()
+    try:
+        # for security reason (optional)
+        sanitized_data = getSanitizedJson(original_json)
+    except Exception, e:
+        return "invalid request"
+    if not course_iid:
+        return "500: course instance is not started"
+    return str(requests.delete("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+
 
 """data manipulation api for registration"""
 
