@@ -164,10 +164,49 @@ POST {ServerPath}/public/course
 ```
 
 **Possible Error Response**
+* 403 Bad request
 * 422 call_number not unique
 * 422 invalid call_number format
 * 500 Failed to connect to mongodb
 * 500 Failed to read configuration of course service from mongodb
+* 500 Failed to connect to eve service
+* 500 Unexpected internal error
+
+
+
+---
+### PUT **/course/_<call_number_>**  
+Update existing columns/attributes in course schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be updated.
+
+**Sample Request**  
+PUT {ServerPath}/public/course/12345
+###### *HTTP Body* 
+```json
+{
+    "title": "Test Course 999"
+}
+```
+
+**Sample Success Response**
+```json
+{
+  "_updated": "Wed, 25 Nov 2015 17:48:59 GMT",
+  "_links": {
+    "self": {
+      "href": "course/12345",
+      "title": "Course"
+    }
+  },
+  "_created": "Wed, 25 Nov 2015 17:48:59 GMT",
+  "_status": "OK",
+  "_id": "5655f48b3fc0e728180682a7",
+  "_etag": "a4d93bed0dea40c0682745f0b20ad122dc8452d1"
+}
+```
+
+**Possible Error Response**
+* 403 Bad request
+* 500 Failed to connect to mongodb
 * 500 Failed to connect to eve service
 * 500 Unexpected internal error
 
@@ -191,6 +230,7 @@ No response received
 ```
 
 **Possible Error Response**
+* 403 Bad request
 * 404 Resource not found
 * 412 Client and server etags don't match
 * 500 Failed to connect to mongodb
@@ -297,6 +337,7 @@ POST {ServerPath}/public/course/schema
 ```
 
 **Possible Error Response**
+* 403 Bad request
 * 500 Failed to connect to mongodb
 * 500 Failed to read configuration of course service from mongodb
 * 500 Failed to connect to eve service
@@ -309,7 +350,7 @@ POST {ServerPath}/public/course/schema
 Update existing columns/attributes in course schema. If a column/attribute in submitted data does not already exist in schema, it will be ignored and the rest will be updated.
 
 **Sample Request**  
-POST {ServerPath}/public/course/schema
+PUT {ServerPath}/public/course/schema
 ###### *HTTP Body* 
 ```json
 {
@@ -334,6 +375,7 @@ POST {ServerPath}/public/course/schema
 ```
 
 **Possible Error Response**
+* 403 Bad request
 * 500 Failed to connect to mongodb
 * 500 Failed to read configuration of course service from mongodb
 * 500 Failed to connect to eve service
@@ -364,6 +406,7 @@ DELETE {ServerPath}/public/course/schema
 ```
 
 **Possible Error Response**
+* 403 Bad request
 * 500 Failed to connect to mongodb
 * 500 Failed to read configuration of course service from mongodb
 * 500 Failed to connect to eve service
