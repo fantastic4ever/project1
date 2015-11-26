@@ -88,14 +88,15 @@ def retrive_student(uni):
     return Response(response.content, mimetype='application/json', status=200)
 
 
-# @app.route('/public/student', methods=['GET'])
-# def retrive_all_student(uni):
-#     """api for student RETRIVE ALL"""
-#     logging.info("receive a retrive_all_student request")
-#     result = 
-#     for shard_number, (host, port) in student_shard_table:
-
-#     return requests.get('http://%s:%s/private/student/%s' % (host, port, uni)).content
+@app.route('/public/student', methods=['GET'])
+def retrive_all_student():
+    """api for student RETRIVE ALL"""
+    logging.info("receive a retrive_all_student request")
+    result = []
+    for shard_number, (host, port) in student_shard_table.items():
+        # logging.info(requests.get('http://%s:%s/private/student' % (host, port)).content)
+        result.append(requests.get('http://%s:%s/private/student' % (host, port)).content)
+    return json.dumps(result)
 
 
 @app.route('/public/student/<uni>', methods=['PUT'])
