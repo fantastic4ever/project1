@@ -289,14 +289,6 @@ def update_registration(rid):
     return str(requests.put('http://%s:%s/private/registration/%s' % (router_config.HOST, registration_iid, rid)).status_code)
 
 
-# @app.route('/public/registration/<rid>', methods=['DELETE'])
-# def delete_registration(rid):
-#     logging.info("receive a delete_registration request")
-#     if not registration_iid:  # iid is port
-#         return "500: registration instance is not started"
-#     return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, registration_iid, rid)).status_code)
-
-
 @app.route('/public/registration/uni/<uni>', methods=['DELETE'])
 def delete_registration_from_uni(uni):
     logging.info("receive a delete_registration_from_uni request")
