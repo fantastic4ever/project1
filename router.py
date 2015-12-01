@@ -95,7 +95,14 @@ def retrive_all_student():
     result = []
     for shard_number, (host, port) in student_shard_table.items():
         # logging.info(requests.get('http://%s:%s/private/student' % (host, port)).content)
-        result.append(requests.get('http://%s:%s/private/student' % (host, port)).content)
+        response = requests.get('http://%s:%s/private/student' % (host, port))
+        result.append(response.content)
+    logging.info(type(response.content))
+    logging.info(type(json.dumps(result)))
+    logging.info(type(result))
+    logging.info(Response(result, mimetype='application/json', status=200))
+    logging.info(Response(json.dumps(result), mimetype='application/json', status=200))
+    return Response(json.dumps(result), mimetype='application/json', status=200)
     return json.dumps(result)
 
 
@@ -190,7 +197,12 @@ def create_course():
         sanitized_data = getSanitizedJson(original_json)
     except Exception, e:
         return "invalid request"
-    return str(requests.post('http://%s:%s/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    conn = httplib.HTTPConnection('%s:%s' % (router_config.HOST, course_iid))
+    conn.request("POST", "/private/course/", json.dumps(sanitized_data), json_headers)
+    return str(conn.getresponse().read())
+    # response = requests.post('http://%s:%s/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data))
+    # return Response(response.content, mimetype='application/json', status=response.status_code)
+    # return str(requests.post('http://%s:%s/private/course' % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 @app.route('/public/course/<cid>', methods=['GET'])
@@ -233,7 +245,12 @@ def delete_course(cid):
     logging.info("receive a delete_course request")
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
+    conn = httplib.HTTPConnection('%s:%s' % (router_config.HOST, course_iid))
+    # logging.info(type(request.headers))
+    header = {'If-Match': request.headers.get('If-Match')}
+    conn.request("DELETE", "/private/course/%s/" % cid, "", header)
+    return str(conn.getresponse().read())
+    # return str(requests.delete('http://%s:%s/private/course/%s' % (router_config.HOST, course_iid, cid), headers=request.headers).status_code)
 
 
 """data definition api for course"""
@@ -250,7 +267,9 @@ def create_new_column_for_course_schema():
         return "invalid request"
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.post("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    response = requests.post("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data))
+    return Response(response.content, mimetype='application/json', status=response.status_code)
+    # return str(requests.post("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 @app.route('/public/course/schema', methods=['GET'])
@@ -259,7 +278,7 @@ def retrive_course_schema():
     if not course_iid:
         return "500: course instance is not started"
     response = requests.get("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid))
-    return Response(response.content, mimetype='application/json', status=200)
+    return Response(response.content, mimetype='application/json', status=response.status_code)
 
 
 @app.route('/public/course/schema', methods=['PUT'])
@@ -273,7 +292,9 @@ def update_column_of_course_schema():
         return "invalid request"
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.put("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    response = requests.put("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data))
+    return Response(response.content, mimetype='application/json', status=response.status_code)
+    # return str(requests.put("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
 
 
 @app.route('/public/course/schema', methods=['DELETE'])
@@ -287,7 +308,8 @@ def delete_column_of_course_schema():
         return "invalid request"
     if not course_iid:
         return "500: course instance is not started"
-    return str(requests.delete("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data)).status_code)
+    response = requests.delete("http://%s:%s/private/course/schema" % (router_config.HOST, course_iid), headers=json_headers, data=json.dumps(sanitized_data))
+    return Response(response.content, mimetype='application/json', status=response.status_code)
 
 
 """data manipulation api for registration"""
@@ -367,6 +389,16 @@ def delete_registration_from_courseid(courseid):
         return "500: registration instance is not started"
     response = requests.delete('http://%s:%s/private/registration/courseid/%s' % (router_config.HOST, registration_iid, courseid))
     return Response(response.content, mimetype='application/json', status=200)
+
+
+@app.route('/public/registration/uni/<uni>/courseid/<cid>', methods = ['DELETE'])
+@app.route('/public/registration/courseid/<cid>/uni/<uni>', methods = ['DELETE'])
+def delete_registration_from_courseid_and_uni(uni, cid):
+    logging.info("receive a delete_registration_from_courseid_and_uni request")
+    if not registration_iid:  # iid is port
+        return "500: registration instance is not started"
+    response = requests.delete('http://%s:%s/private/registration/uni/%s/courseid/%s' % (router_config.HOST, registration_iid, uni, cid))
+    return response.content
 
 
 
@@ -462,4 +494,4 @@ def init():
 
 if __name__ == '__main__':
     init()
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
