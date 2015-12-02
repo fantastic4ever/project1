@@ -2,9 +2,14 @@ from eve import Eve
 from flask import Response, request
 from pymongo import MongoClient
 import requests, json, sys
+import logging
+
+import config
 
 mongo_url = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
 
+logging.basicConfig(filename=config.COURSE_LOG_FILENAME, 
+                    level=logging.INFO, format='%(asctime)s --- %(message)s')
 
 
 #####################
@@ -18,15 +23,15 @@ try:
 	client.close()
 	if cursor.count() < 1:
 		raise ConfigurationUnavailable
-	# print cursor[0]
-	#print '========= SCHEMA =========\n%s\n==========================' % (cursor[0]['value'])
+	# logging.info(cursor[0])
+	#logging.info('========= SCHEMA =========\n%s\n==========================' % (cursor[0]['value']))
 	schema = cursor[0]['value']
 except Exception as e:
 	if type(e).__name__ == 'ConnectionError':
-		print 'Error: Cannot connect to mongodb'
+		logging.error('Error: Cannot connect to mongodb')
 		raise MongoDbUnavailable
 	else:
-		print 'Error: %s when getting schema from mongodb' % (type(e).__name__)
+		logging.error('Error: %s when getting schema from mongodb' % (type(e).__name__))
 		raise e
 
 # Settings
@@ -101,7 +106,7 @@ def registration_failed_to_delete(error):
 def unexpected_failure(error):
     template = "An exception of type {0} occured. Arguments:\n{1!r}"
     message = template.format(type(error).__name__, error.args)
-    print message
+    logging.info(message)
     return Response('{"_status": "ERR", "_error": {"message": "Unexpected failure", "code": 500}}', mimetype='application/json', status=500)
 
 
@@ -110,7 +115,7 @@ def unexpected_failure(error):
 # Event handlers #
 ##################
 def pre_DELETE_callback(resource, request, lookup):
-	print 'Received DELETE request, resource = %s, lookup = %s' % (resource, lookup)
+	logging.info('Received DELETE request, resource = %s, lookup = %s' % (resource, lookup))
 	if resource != 'course':
 		return
 
@@ -123,32 +128,32 @@ def pre_DELETE_callback(resource, request, lookup):
 		if cursor.count() < 1:
 			raise RegistrationServiceUnavailable
 		else:
-			# print cursor[0]
+			# logging.info(cursor[0])
 			registration_service_url = 'http://' + cursor[0]['host'] + ':' + str(cursor[0]['port']) + '/private/registration/uni/'
-		print 'requesting %s"%s"' % (registration_service_url, lookup['call_number'])
+		logging.info('requesting %s"%s"' % (registration_service_url, lookup['call_number']))
 	except Exception as e:
 		if type(e).__name__ == 'ConnectionError':
-			print 'Error: Cannot connect to mongodb'
+			logging.error('Error: Cannot connect to mongodb')
 			raise MongoDbUnavailable
 		else:
-			print 'Error: %s when getting registration_service_url from mongodb' % (type(e).__name__)
+			logging.error('Error: %s when getting registration_service_url from mongodb' % (type(e).__name__))
 			raise e
 
 	# Try delete from registration before delete locally
 	try:
 		response = requests.delete(registration_service_url + '"' + lookup['call_number'] + '"')
-		# print response.__dict__['status_code']
-		# print response.json # Response body
+		# logging.info(response.__dict__['status_code'])
+		# logging.info(response.json # Response body)
 		status_code = response.__dict__['status_code']
 		if status_code != 200 and status_code != 404:
-			print "Exception: Failed to delete related registration information"
+			logging.error("Exception: Failed to delete related registration information")
 			raise RegistrationServiceError
 	except Exception as e:
 		if type(e).__name__ == 'ConnectionError':
-			print 'Error: Registartion service is not running'
+			logging.error('Error: Registartion service is not running')
 			raise RegistrationServiceUnavailable
 		else:
-			print 'Error: %s when deleting %s from registration' % (type(e).__name__, lookup['call_number'])
+			logging.error('Error: %s when deleting %s from registration' % (type(e).__name__, lookup['call_number']))
 			raise e
 
 

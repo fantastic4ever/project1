@@ -1,14 +1,19 @@
 from eve import Eve
 import sys
 from pymongo import MongoClient
+import logging
+import config
+
+logging.basicConfig(filename=config.REGISTRATION_LOG_FILENAME, 
+                    level=logging.INFO, format='%(asctime)s --- %(message)s')
 
 uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
 client = MongoClient(uri)
 db = client.get_default_database()
 schema = db.schema
 my_schema = schema.find_one({'name': 'registration'})
-print 'eve.......'
-print my_schema['value']
+logging.info('eve.......')
+logging.info(my_schema['value'])
 
 my_settings = {
     'MONGO_HOST': 'ds039684.mongolab.com',

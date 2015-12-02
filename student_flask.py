@@ -9,13 +9,15 @@ import logging
 import util
 from util import mongo_url
 
+import config
+
 app = Flask(__name__)
 eve_url = ''
 global eve_process
 global args
 student_num = 'student'
 student_schema = util.get_eve_schema('student')
-logging.basicConfig(filename="student.log",
+logging.basicConfig(filename=config.STUDENT_LOG_FILENAME,
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 
 
@@ -68,7 +70,7 @@ def update_student(uni):
 	#Get student information
 	response = requests.get(eve_url + uni)
 	student_info = response.json()
-	print request.get_json()
+	logging.info(request.get_json())
 	if response.status_code > 204:    #Fail to get student information by uni
 		return Response(response.content, mimetype='application/json', status=response.status_code)
 	#Send PATCH request to eve service to update student information
@@ -91,7 +93,7 @@ def delete_student_schema():
 			del student_schema[k]
 			count = count + 1
 		else:
-			print k + ' does not exists in student schema, can not delete it'
+			logging.error(k + ' does not exists in student schema, can not delete it')
 	result = util.update_eve_setting("student", student_schema)
 	#restart eve service to load new schema settings
 	stop_eve_process()
@@ -107,7 +109,7 @@ def add_student_schema():
 	count = 0
 	for k, v in content.items():
 		if k in student_schema.keys():
-			print k + ' already exists in student schema, can not add it'
+			logging.error(k + ' already exists in student schema, can not add it')
 		else:
 			student_schema[k] = v
 			count += 1
@@ -128,7 +130,7 @@ def update_student_schema():
 			student_schema[k] = v
 			count += 1
 		else:
-			print k + ' does not exists in student schema, can not update it'
+			logging.error(k + ' does not exists in student schema, can not update it')
 	# update the schema in mongodb
 	result = util.update_eve_setting('student', student_schema)
 	stop_eve_process()
@@ -143,11 +145,11 @@ def shutdown_eve_service():
 	return Response(status=200)
 
 def stop_eve_process():
-	print "stopping student eve process..."
+	logging.info("stopping student eve process...")
 	os.kill(sf.eve_process.pid, signal.SIGTERM)
 
 def start_eve_process():
-	print "starting student eve process..."
+	logging.info("starting student eve process...")
 	sf.eve_process = subprocess.Popen(args)
 
 if __name__ == "__main__":
