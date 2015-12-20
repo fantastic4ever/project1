@@ -6,10 +6,11 @@ import sys, subprocess, signal, time
 import os
 import re
 import logging
+import credentials
 
 import config
 
-mongo_url = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+mongo_url = 'mongodb://%s:%s@ds039684.mongolab.com:39684/project1' % (credentials.DB_USERNAME, credentials.DB_PASSWORD)
 
 logging.basicConfig(filename=config.COURSE_LOG_FILENAME, 
                     level=logging.INFO, format='%(asctime)s --- %(message)s')

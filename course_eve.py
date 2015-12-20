@@ -3,10 +3,11 @@ from flask import Response, request
 from pymongo import MongoClient
 import requests, json, sys
 import logging
+import credentials
 
 import config
 
-mongo_url = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+mongo_url = 'mongodb://%s:%s@ds039684.mongolab.com:39684/project1' % (credentials.DB_USERNAME, credentials.DB_PASSWORD)
 
 logging.basicConfig(filename=config.COURSE_LOG_FILENAME, 
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
@@ -39,8 +40,8 @@ settings = {
 	# Use db hosted on MongoLab
 	'MONGO_HOST': 'ds039684.mongolab.com',
 	'MONGO_PORT': 39684,
-	'MONGO_USERNAME': 'admin',
-	'MONGO_PASSWORD': 'admin',
+	'MONGO_USERNAME': credentials.DB_USERNAME,
+	'MONGO_PASSWORD': credentials.DB_PASSWORD,
 	'MONGO_DBNAME': 'project1',
 	# URL prefix
 	'URL_PREFIX': 'private',

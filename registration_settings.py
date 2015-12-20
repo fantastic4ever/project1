@@ -1,7 +1,9 @@
+import credentials
+
 MONGO_HOST = 'ds039684.mongolab.com'
 MONGO_PORT = 39684
-MONGO_USERNAME = 'admin'
-MONGO_PASSWORD = 'admin'
+MONGO_USERNAME = credentials.DB_USERNAME
+MONGO_PASSWORD = credentials.DB_PASSWORD
 MONGO_DBNAME = 'project1'
 
 DOMAIN = {

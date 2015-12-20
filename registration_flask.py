@@ -8,6 +8,7 @@ from pymongo import MongoClient
 import registration_flask as rf 
 import config
 import logging
+import credentials
 
 global eve_process
 global args
@@ -15,7 +16,7 @@ global args
 logging.basicConfig(filename=config.REGISTRATION_LOG_FILENAME, 
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 
-uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+uri = 'mongodb://%s:%s@ds039684.mongolab.com:39684/project1' % (credentials.DB_USERNAME, credentials.DB_PASSWORD)
 client = MongoClient(uri)
 db = client.get_default_database()
 schema = db.schema

@@ -3,11 +3,13 @@ import sys
 from pymongo import MongoClient
 import logging
 import config
+import credentials
+
 
 logging.basicConfig(filename=config.REGISTRATION_LOG_FILENAME, 
                     level=logging.INFO, format='%(asctime)s --- %(message)s')
 
-uri = 'mongodb://admin:admin@ds039684.mongolab.com:39684/project1'
+uri = 'mongodb://%s:%s@ds039684.mongolab.com:39684/project1' % (credentials.DB_USERNAME, credentials.DB_PASSWORD)
 client = MongoClient(uri)
 db = client.get_default_database()
 schema = db.schema
@@ -18,8 +20,8 @@ logging.info(my_schema['value'])
 my_settings = {
     'MONGO_HOST': 'ds039684.mongolab.com',
     'MONGO_PORT': 39684,
-	'MONGO_USERNAME': 'admin',
-	'MONGO_PASSWORD': 'admin',
+	'MONGO_USERNAME': credentials.DB_USERNAME,
+	'MONGO_PASSWORD': credentials.DB_PASSWORD,
 	'MONGO_DBNAME': 'project1',
     'DOMAIN': {
     	'registration': {
